@@ -488,4 +488,10 @@ public interface JmxLogger extends BasicLogger {
 
     @Message(id = 51, value = "Remove notification listener using ObjectName %s is not supported")
     UnsupportedOperationException removeNotificationListenerNotAllowed(ObjectName name);
+
+    @Message(id = 52, value = "Management integration with JMX")
+    String jmxCapability();
+
+    @Message(id = 53, value = "Remote JMX (JSR 166) Capability")
+    String remoteJmxCapability();
 }

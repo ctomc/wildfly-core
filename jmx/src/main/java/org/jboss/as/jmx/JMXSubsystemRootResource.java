@@ -27,6 +27,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.OperationContext;
@@ -42,13 +43,16 @@ import org.jboss.as.controller.access.management.AccessConstraintDefinition;
 import org.jboss.as.controller.access.management.JmxAuthorizer;
 import org.jboss.as.controller.access.management.SensitiveTargetAccessConstraintDefinition;
 import org.jboss.as.controller.audit.ManagedAuditLogger;
+import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.jmx.logging.JmxLogger;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
 
 /**
@@ -68,6 +72,15 @@ public class JMXSubsystemRootResource extends SimpleResourceDefinition {
             .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.ACCESS_CONTROL)
             .setXmlName(CommonAttributes.NON_CORE_MBEANS)
             .setDefaultValue(new ModelNode(false)).build();
+
+    static final RuntimeCapability<JmxCapability> JMX_CAPABILITY =
+            new RuntimeCapability<JmxCapability>("org.wildfly.extension.jmx", new JmxCapability()) {
+        @Override
+        public String getDescription(Locale locale) {
+            JmxLogger i18n = Logger.getMessageLogger(JmxLogger.class, "", locale);
+            return i18n.jmxCapability();
+        }
+    };
 
     private final List<AccessConstraintDefinition> accessConstraints;
 

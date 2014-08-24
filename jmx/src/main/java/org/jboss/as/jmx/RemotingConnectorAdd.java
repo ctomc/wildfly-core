@@ -34,6 +34,7 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.remoting.RemotingCapability;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceTarget;
@@ -46,6 +47,7 @@ class RemotingConnectorAdd extends AbstractAddStepHandler {
     static final RemotingConnectorAdd INSTANCE = new RemotingConnectorAdd();
 
     private RemotingConnectorAdd() {
+        super(RemotingConnectorResource.REMOTE_JMX_CAPABILITY);
     }
 
     @Override
@@ -59,11 +61,21 @@ class RemotingConnectorAdd extends AbstractAddStepHandler {
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model,
             ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers)
             throws OperationFailedException {
-        boolean useManagementEndpoint = true;
-        if(model.hasDefined(USE_MANAGEMENT_ENDPOINT)) {
-             useManagementEndpoint = RemotingConnectorResource.USE_MANAGEMENT_ENDPOINT.resolveModelAttribute(context, model).asBoolean();
-        }
 
+        boolean useManagementEndpoint = RemotingConnectorResource.USE_MANAGEMENT_ENDPOINT.resolveModelAttribute(context, model).asBoolean();
+
+        RemotingCapability remotingCapability = null;
+        if (!useManagementEndpoint) {
+            // Use the remoting capability
+            // if (context.getProcessType() == ProcessType.DOMAIN_SERVER) then DomainServerCommunicationServices
+            // installed the "remoting subsystem" endpoint and we don't even necessarily *have to* have a remoting
+            // subsystem and possibly we could skip adding the requirement for its capability. But really, specifying
+            // not to use the management endpoint and then not configuring a remoting subsystem is a misconfiguration,
+            // and we should treat it as such. So, we add the requirement no matter what.
+            context.requireOptionalCapability(RemotingConnectorResource.REMOTING_CAPABILITY, RemotingConnectorResource.REMOTE_JMX_CAPABILITY.getName(),
+                        RemotingConnectorResource.USE_MANAGEMENT_ENDPOINT.getName());
+            remotingCapability = context.getCapabilityRuntimeAPI(RemotingConnectorResource.REMOTING_CAPABILITY, RemotingCapability.class);
+        }
         // Read the model for the JMW subsystem to find the domain name for the resolved/expressions models (if they are exposed).
         PathAddress address = PathAddress.pathAddress(operation.get(ModelDescriptionConstants.OP_ADDR));
         PathAddress parentAddress = address.subAddress(0, address.size() - 1);
@@ -71,13 +83,15 @@ class RemotingConnectorAdd extends AbstractAddStepHandler {
         String resolvedDomain = getDomainName(context, jmxSubsystemModel, CommonAttributes.RESOLVED);
         String expressionsDomain = getDomainName(context, jmxSubsystemModel, CommonAttributes.EXPRESSION);
 
-        launchServices(context, verificationHandler, newControllers, useManagementEndpoint, resolvedDomain, expressionsDomain);
+        launchServices(context, verificationHandler, newControllers, remotingCapability, resolvedDomain, expressionsDomain);
     }
 
-    void launchServices(OperationContext context, ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers, boolean useManagementEndpoint, String resolvedDomain, String expressionsDomain) {
+    void launchServices(OperationContext context, ServiceVerificationHandler verificationHandler, List<ServiceController<?>> newControllers,
+                        RemotingCapability remotingCapability, String resolvedDomain, String expressionsDomain) {
 
         final ServiceTarget target = context.getServiceTarget();
-        ServiceController<?> controller = RemotingConnectorService.addService(target, verificationHandler, useManagementEndpoint, resolvedDomain, expressionsDomain);
+        ServiceController<?> controller = RemotingConnectorService.addService(target, verificationHandler,
+                remotingCapability, resolvedDomain, expressionsDomain);
         if (newControllers != null) {
             newControllers.add(controller);
         }

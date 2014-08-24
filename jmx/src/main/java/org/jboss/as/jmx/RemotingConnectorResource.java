@@ -21,18 +21,27 @@
 */
 package org.jboss.as.jmx;
 
+import static org.jboss.as.jmx.CommonAttributes.JMX;
+import static org.jboss.as.jmx.CommonAttributes.REMOTING_CONNECTOR;
+
+import java.util.Collections;
+import java.util.Locale;
+
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ReloadRequiredWriteAttributeHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
+import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.jmx.logging.JmxLogger;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-
-import static org.jboss.as.jmx.CommonAttributes.JMX;
-import static org.jboss.as.jmx.CommonAttributes.REMOTING_CONNECTOR;
+import org.jboss.logging.Logger;
 
 /**
  *
@@ -46,6 +55,17 @@ public class RemotingConnectorResource extends SimpleResourceDefinition {
             .setDefaultValue(new ModelNode(true))
             .setAllowExpression(true)
             .build();
+
+    static final String REMOTING_CAPABILITY = "org.wildfly.extension.remoting";
+    static final RuntimeCapability<Void> REMOTE_JMX_CAPABILITY = new RuntimeCapability<Void>("org.wildfly.extension.jmx.remote", null,
+            Collections.singleton(JMXSubsystemRootResource.JMX_CAPABILITY.getName()), Collections.singleton(REMOTING_CAPABILITY)) {
+        @Override
+        public String getDescription(Locale locale) {
+            JmxLogger i18n = Logger.getMessageLogger(JmxLogger.class, "", locale);
+            return i18n.remoteJmxCapability();
+        }
+    };
+
     static final RemotingConnectorResource INSTANCE = new RemotingConnectorResource();
 
     private RemotingConnectorResource() {
@@ -57,7 +77,36 @@ public class RemotingConnectorResource extends SimpleResourceDefinition {
 
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
-        final OperationStepHandler writeHandler = new ReloadRequiredWriteAttributeHandler(USE_MANAGEMENT_ENDPOINT);
+        final OperationStepHandler writeHandler = new ReloadRequiredWriteAttributeHandler(USE_MANAGEMENT_ENDPOINT){
+            @Override
+            protected void finishModelStage(OperationContext context, ModelNode operation, String attributeName, ModelNode newValue, ModelNode oldValue, Resource model) throws OperationFailedException {
+                super.finishModelStage(context, operation, attributeName, newValue, oldValue, model);
+
+                Boolean needRemoting = needRemoting(context, model.getModel());
+                if (needRemoting != null) {
+                    if (needRemoting) {
+                        context.registerAdditionalCapabilityRequirement(REMOTING_CAPABILITY,
+                                REMOTE_JMX_CAPABILITY.getName(),
+                                USE_MANAGEMENT_ENDPOINT.getName());
+                    } else {
+                        context.deregisterCapabilityRequirement(REMOTING_CAPABILITY, REMOTE_JMX_CAPABILITY.getName());
+                    }
+                }
+            }
+
+            private Boolean needRemoting(OperationContext context, ModelNode model) {
+                try {
+                    return USE_MANAGEMENT_ENDPOINT.resolveModelAttribute(context, model).asBoolean();
+                } catch (OperationFailedException ofe) {
+                    if (model.get(USE_MANAGEMENT_ENDPOINT.getName()).getType() == ModelType.EXPRESSION) {
+                        // Must be a vault expression or something we can't resolve in Stage.MODEL.
+                        // So we can only do nothing and hope for the best when they reload
+                        return null;
+                    }
+                    throw new IllegalStateException(ofe);
+                }
+            }
+        };
         resourceRegistration.registerReadWriteAttribute(USE_MANAGEMENT_ENDPOINT, null, writeHandler);
     }
 }

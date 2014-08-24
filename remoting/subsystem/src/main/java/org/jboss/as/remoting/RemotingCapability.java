@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2010, Red Hat, Inc., and individual contributors
+ * Copyright 2014, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -22,24 +22,24 @@
 
 package org.jboss.as.remoting;
 
-import org.jboss.as.controller.AbstractRemoveStepHandler;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.dmr.ModelNode;
+import org.jboss.msc.service.ServiceName;
 
 /**
- * Removes the remoting subsystem
+ * API exposed as a {@link org.jboss.as.controller.capability.RuntimeCapability} by the remoting subsystem
+ * for use by other subsystems.
  *
- * @author Kabir Khan
+ * @author Brian Stansberry (c) 2014 Red Hat Inc.
  */
-public class RemotingSubsystemRemove extends AbstractRemoveStepHandler {
+public class RemotingCapability {
 
-    static final RemotingSubsystemRemove INSTANCE = new RemotingSubsystemRemove();
-
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
-        context.removeService(RemotingServices.SUBSYSTEM_ENDPOINT);
-    }
-
-    protected void recoverServices(OperationContext context, ModelNode operation, ModelNode model) {
-        // TODO:  RE-ADD SERVICES
+    /**
+     * Gets the {@link org.jboss.msc.service.ServiceName name} of the service whose
+     * {@link org.jboss.msc.service.Service#getValue() value} is
+     * the {@link org.jboss.remoting3.Endpoint} provided by this capability.
+     *
+     * @return the service name. Will not be {@code null}
+     */
+    public ServiceName getEndpointServiceName() {
+        return RemotingServices.SUBSYSTEM_ENDPOINT;
     }
 }

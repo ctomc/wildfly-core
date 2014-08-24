@@ -123,4 +123,7 @@ public interface RemotingLogger extends BasicLogger {
 
     @Message(id = 23, value = "Only one of '%s' configuration or '%s' configuration is allowed")
     String workerThreadsEndpointConfigurationChoiceRequired(String workerThreads, String endpoint);
+
+    @Message(id = 242, value = "Remote communication capability using JBoss Remoting")
+    String remotingCapability();
 }

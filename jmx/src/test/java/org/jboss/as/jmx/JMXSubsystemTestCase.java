@@ -94,6 +94,7 @@ public class JMXSubsystemTestCase extends AbstractSubsystemTest {
         super(JMXExtension.SUBSYSTEM_NAME, new JMXExtension());
     }
 
+
     @Test
     public void testParseEmptySubsystem() throws Exception {
         //Parse the subsystem xml into operations
@@ -1086,7 +1087,8 @@ public class JMXSubsystemTestCase extends AbstractSubsystemTest {
 
         @Override
         protected void initializeExtraSubystemsAndModel(ExtensionRegistry extensionRegistry, Resource rootResource,
-                                        ManagementResourceRegistration rootRegistration) {
+                                        ManagementResourceRegistration rootRegistration,
+                                        RuntimeCapabilityRegistry capabilityRegistry) {
             rootRegistration.registerReadOnlyAttribute(ServerEnvironmentResourceDescription.LAUNCH_TYPE, new OperationStepHandler() {
 
                 @Override
@@ -1094,6 +1096,8 @@ public class JMXSubsystemTestCase extends AbstractSubsystemTest {
                     context.getResult().set(TYPE_STANDALONE);
                 }
             });
+
+            AdditionalInitialization.registerCapabilities(capabilityRegistry, RemotingConnectorResource.REMOTING_CAPABILITY);
         }
 
         @Override
@@ -1127,6 +1131,7 @@ public class JMXSubsystemTestCase extends AbstractSubsystemTest {
             Resource testFileHandler = Resource.Factory.create();
             testFileHandler.getModel().setEmptyObject();
             auditLog.registerChild(PathElement.pathElement(FILE_HANDLER, "test"), testFileHandler);
+
         }
     }
 
@@ -1147,6 +1152,8 @@ public class JMXSubsystemTestCase extends AbstractSubsystemTest {
             Resource testFileHandler = Resource.Factory.create();
             testFileHandler.getModel().setEmptyObject();
             auditLog.registerChild(PathElement.pathElement(FILE_HANDLER, "test"), testFileHandler);
+
+            AdditionalInitialization.registerCapabilities(capabilityRegistry, RemotingConnectorResource.REMOTING_CAPABILITY);
         }
     }
 

@@ -21,6 +21,8 @@
 */
 package org.jboss.as.remoting;
 
+import java.util.Locale;
+
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.OperationContext;
@@ -28,17 +30,22 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ProcessType;
+import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
 import org.jboss.as.controller.RestartParentWriteAttributeHandler;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
+import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.remoting.logging.RemotingLogger;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceName;
 
 /**
@@ -65,13 +72,24 @@ public class RemotingSubsystemRootResource extends SimpleResourceDefinition {
             WORKER_WRITE_THREADS
     };
 
+    static final RuntimeCapability<RemotingCapability> REMOTING_CAPABILITY =
+            new RuntimeCapability<RemotingCapability>("org.wildfly.extension.remoting", new RemotingCapability()) {
+        @Override
+        public String getDescription(Locale locale) {
+            RemotingLogger i18n = Logger.getMessageLogger(RemotingLogger.class, "", locale);
+            return i18n.remotingCapability();
+        }
+    };
+
     private final ProcessType processType;
 
     public RemotingSubsystemRootResource(final ProcessType processType) {
         super(PATH,
                 RemotingExtension.getResourceDescriptionResolver(RemotingExtension.SUBSYSTEM_NAME),
                 RemotingSubsystemAdd.INSTANCE,
-                RemotingSubsystemRemove.INSTANCE);
+                new ReloadRequiredRemoveStepHandler(REMOTING_CAPABILITY),
+                OperationEntry.Flag.RESTART_NONE,
+                OperationEntry.Flag.RESTART_ALL_SERVICES);
         this.processType = processType;
     }
 

@@ -40,6 +40,7 @@ public class JMXSubsystemRemove extends AbstractRemoveStepHandler {
     private final JmxAuthorizer authorizer;
 
     JMXSubsystemRemove(ManagedAuditLogger auditLoggerInfo, JmxAuthorizer authorizer) {
+        super(JMXSubsystemRootResource.JMX_CAPABILITY);
         this.auditLoggerInfo = auditLoggerInfo;
         this.authorizer = authorizer;
     }

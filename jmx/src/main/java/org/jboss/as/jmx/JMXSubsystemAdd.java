@@ -47,6 +47,7 @@ class JMXSubsystemAdd extends AbstractAddStepHandler {
     private final JmxAuthorizer authorizer;
 
     JMXSubsystemAdd(ManagedAuditLogger auditLoggerInfo, JmxAuthorizer authorizer) {
+        super(JMXSubsystemRootResource.JMX_CAPABILITY);
         this.auditLoggerInfo = auditLoggerInfo;
         this.authorizer = authorizer;
     }
