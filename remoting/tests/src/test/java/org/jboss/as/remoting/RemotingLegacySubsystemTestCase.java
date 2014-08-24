@@ -34,6 +34,8 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REM
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.WRITE_ATTRIBUTE_OPERATION;
+import static org.jboss.as.remoting.RemotingSubsystemTestUtil.DEFAULT_ADDITIONAL_INITIALIZATION;
+import static org.jboss.as.remoting.RemotingSubsystemTestUtil.HC_ADDITIONAL_INITIALIZATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -43,8 +45,13 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.capability.registry.RuntimeCapabilityRegistry;
+import org.jboss.as.controller.extension.ExtensionRegistry;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.AbsolutePathService;
 import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.subsystem.test.AbstractSubsystemBaseTest;
@@ -57,6 +64,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceNotFoundException;
 import org.jboss.msc.service.ServiceTarget;
 import org.junit.Test;
+import org.wildfly.extension.io.IOCapability;
 import org.wildfly.extension.io.IOServices;
 import org.wildfly.extension.io.WorkerService;
 import org.xnio.OptionMap;
@@ -71,14 +79,19 @@ public class RemotingLegacySubsystemTestCase extends AbstractSubsystemBaseTest {
         super(RemotingExtension.SUBSYSTEM_NAME, new RemotingExtension());
     }
 
+    @Override
+    protected AdditionalInitialization createAdditionalInitialization() {
+        return DEFAULT_ADDITIONAL_INITIALIZATION;
+    }
+
     @Test
     public void testSubsystemWithThreadParameters() throws Exception {
-        standardSubsystemTest("remoting-with-threads.xml", null, true, AdditionalInitialization.ADMIN_ONLY_HC);
+        standardSubsystemTest("remoting-with-threads.xml", null, true, HC_ADDITIONAL_INITIALIZATION);
     }
 
     @Test
     public void testSubsystemWithThreadAttributeChange() throws Exception {
-        KernelServices services = createKernelServicesBuilder(AdditionalInitialization.ADMIN_ONLY_HC)
+        KernelServices services = createKernelServicesBuilder(HC_ADDITIONAL_INITIALIZATION)
                 .setSubsystemXmlResource("remoting-with-threads.xml")
                 .build();
 
@@ -191,12 +204,14 @@ public class RemotingLegacySubsystemTestCase extends AbstractSubsystemBaseTest {
             services.getContainer().getRequiredService(RemotingServices.SUBSYSTEM_ENDPOINT);
             fail("Expected no " + RemotingServices.SUBSYSTEM_ENDPOINT);
         } catch (ServiceNotFoundException expected) {
+            // ok
         }
 
         try {
             services.getContainer().getRequiredService(RemotingServices.serverServiceName("test-connector"));
             fail("Expected no " + RemotingServices.serverServiceName("test-connector"));
         } catch (ServiceNotFoundException expected) {
+            // ok
         }
     }
 
@@ -261,6 +276,13 @@ public class RemotingLegacySubsystemTestCase extends AbstractSubsystemBaseTest {
                 target.addService(IOServices.WORKER.append("default"), new WorkerService(OptionMap.builder().set(Options.WORKER_IO_THREADS, 2).getMap()))
                         .setInitialMode(ServiceController.Mode.ACTIVE)
                         .install();
+            }
+
+            @Override
+            protected void initializeExtraSubystemsAndModel(ExtensionRegistry extensionRegistry, Resource rootResource, ManagementResourceRegistration rootRegistration, RuntimeCapabilityRegistry capabilityRegistry) {
+                super.initializeExtraSubystemsAndModel(extensionRegistry, rootResource, rootRegistration, capabilityRegistry);
+                AdditionalInitialization.registerCapabilities(capabilityRegistry,
+                        Collections.singletonMap(RemotingSubsystemRootResource.IO_CAPABILITY, (Object) new IOCapability()));
             }
         };
     }

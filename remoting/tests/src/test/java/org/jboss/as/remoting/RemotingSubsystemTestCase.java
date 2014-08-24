@@ -21,13 +21,18 @@
 */
 package org.jboss.as.remoting;
 
+import static org.jboss.as.remoting.RemotingSubsystemTestUtil.DEFAULT_ADDITIONAL_INITIALIZATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
+import org.jboss.as.controller.capability.registry.RuntimeCapabilityRegistry;
+import org.jboss.as.controller.extension.ExtensionRegistry;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.AbsolutePathService;
 import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.subsystem.test.AbstractSubsystemBaseTest;
@@ -39,6 +44,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.remoting3.Endpoint;
 import org.junit.Test;
+import org.wildfly.extension.io.IOCapability;
 import org.wildfly.extension.io.IOServices;
 import org.wildfly.extension.io.WorkerService;
 import org.xnio.OptionMap;
@@ -51,6 +57,11 @@ public class RemotingSubsystemTestCase extends AbstractSubsystemBaseTest {
 
     public RemotingSubsystemTestCase() {
         super(RemotingExtension.SUBSYSTEM_NAME, new RemotingExtension());
+    }
+
+    @Override
+    protected AdditionalInitialization createAdditionalInitialization() {
+        return DEFAULT_ADDITIONAL_INITIALIZATION;
     }
 
     /**
@@ -120,6 +131,13 @@ public class RemotingSubsystemTestCase extends AbstractSubsystemBaseTest {
                 target.addService(IOServices.WORKER.append("default-remoting"), new WorkerService(OptionMap.builder().set(Options.WORKER_IO_THREADS, 2).getMap()))
                         .setInitialMode(ServiceController.Mode.ACTIVE)
                         .install();
+            }
+
+            @Override
+            protected void initializeExtraSubystemsAndModel(ExtensionRegistry extensionRegistry, Resource rootResource, ManagementResourceRegistration rootRegistration, RuntimeCapabilityRegistry capabilityRegistry) {
+                super.initializeExtraSubystemsAndModel(extensionRegistry, rootResource, rootRegistration, capabilityRegistry);
+                AdditionalInitialization.registerCapabilities(capabilityRegistry,
+                        Collections.singletonMap(RemotingSubsystemRootResource.IO_CAPABILITY, (Object) new IOCapability()));
             }
         };
     }

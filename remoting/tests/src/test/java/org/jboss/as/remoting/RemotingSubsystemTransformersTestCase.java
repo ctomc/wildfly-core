@@ -32,6 +32,8 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUC
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.UNDEFINE_ATTRIBUTE_OPERATION;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.WRITE_ATTRIBUTE_OPERATION;
+import static org.jboss.as.remoting.RemotingSubsystemTestUtil.DEFAULT_ADDITIONAL_INITIALIZATION;
+import static org.jboss.as.remoting.RemotingSubsystemTestUtil.HC_ADDITIONAL_INITIALIZATION;
 import static org.jboss.as.remoting.SaslPolicyResource.FORWARD_SECRECY;
 import static org.jboss.as.remoting.SaslPolicyResource.NO_ACTIVE;
 import static org.jboss.as.remoting.SaslPolicyResource.NO_ANONYMOUS;
@@ -96,7 +98,7 @@ public class RemotingSubsystemTransformersTestCase extends AbstractSubsystemTest
 
     private void testExpressionsAreRejectedByVersion_1_1(ModelTestControllerVersion controllerVersion) throws Exception {
         String subsystemXml = readResource("remoting-with-expressions.xml");
-        KernelServicesBuilder builder = createKernelServicesBuilder(AdditionalInitialization.ADMIN_ONLY_HC);
+        KernelServicesBuilder builder = createKernelServicesBuilder(HC_ADDITIONAL_INITIALIZATION);
 
         // Add legacy subsystems
         ModelVersion version_1_1 = ModelVersion.create(1, 1);
@@ -180,7 +182,7 @@ public class RemotingSubsystemTransformersTestCase extends AbstractSubsystemTest
 
     private void testNonRemotingProtocolRejectedByVersion1_2(ModelTestControllerVersion controllerVersion) throws Exception {
         String subsystemXml = readResource("remoting-with-expressions.xml");
-        KernelServicesBuilder builder = createKernelServicesBuilder(AdditionalInitialization.ADMIN_ONLY_HC);
+        KernelServicesBuilder builder = createKernelServicesBuilder(HC_ADDITIONAL_INITIALIZATION);
 
         // Add legacy subsystems
         ModelVersion version_1_1 = ModelVersion.create(1, 2);
@@ -222,7 +224,7 @@ public class RemotingSubsystemTransformersTestCase extends AbstractSubsystemTest
     }
 
     private void testTransformers_1_1(ModelTestControllerVersion controllerVersion) throws Exception {
-        KernelServicesBuilder builder = createKernelServicesBuilder(AdditionalInitialization.ADMIN_ONLY_HC)
+        KernelServicesBuilder builder = createKernelServicesBuilder(HC_ADDITIONAL_INITIALIZATION)
                 .setSubsystemXmlResource("remoting-without-expressions.xml");
         ModelVersion oldVersion = ModelVersion.create(1, 1);
 
@@ -287,7 +289,7 @@ public class RemotingSubsystemTransformersTestCase extends AbstractSubsystemTest
 
 
     private void testTransformers_1_2_0(ModelTestControllerVersion controllerVersion) throws Exception {
-        KernelServicesBuilder builder = createKernelServicesBuilder(AdditionalInitialization.MANAGEMENT)
+        KernelServicesBuilder builder = createKernelServicesBuilder(DEFAULT_ADDITIONAL_INITIALIZATION)
                 .setSubsystemXmlResource("remoting-with-expressions-and-good-legacy-protocol.xml");
         ModelVersion oldVersion = ModelVersion.create(1, 2, 0);
 

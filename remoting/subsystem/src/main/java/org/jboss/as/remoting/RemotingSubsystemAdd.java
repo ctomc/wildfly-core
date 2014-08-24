@@ -37,7 +37,7 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.remoting3.Endpoint;
-import org.wildfly.extension.io.IOServices;
+import org.wildfly.extension.io.IOCapability;
 import org.wildfly.security.manager.WildFlySecurityManager;
 import org.xnio.OptionMap;
 import org.xnio.XnioWorker;
@@ -94,8 +94,11 @@ class RemotingSubsystemAdd extends AbstractAddStepHandler {
                 return;
             }
         }
+
+        IOCapability ioCapability = context.getCapabilityRuntimeAPI(RemotingSubsystemRootResource.IO_CAPABILITY, IOCapability.class);
+
         final ServiceBuilder<Endpoint> builder = serviceTarget.addService(RemotingServices.SUBSYSTEM_ENDPOINT, endpointService)
-                .addDependency(IOServices.WORKER.append(workerName), XnioWorker.class, endpointService.getWorker());
+                .addDependency(ioCapability.getXnioWorkerServiceName(workerName), XnioWorker.class, endpointService.getWorker());
 
         if (verificationHandler != null) {
             builder.addListener(verificationHandler);

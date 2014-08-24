@@ -46,6 +46,7 @@ class IOSubsystemAdd extends AbstractBoottimeAddStepHandler {
     static final IOSubsystemAdd INSTANCE = new IOSubsystemAdd();
 
     private IOSubsystemAdd() {
+        super(IORootDefinition.IO_CAPABILITY_RUNTIME_CAPABILITY);
     }
 
     /**

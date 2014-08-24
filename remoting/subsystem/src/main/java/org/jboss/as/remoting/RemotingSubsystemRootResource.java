@@ -21,6 +21,7 @@
 */
 package org.jboss.as.remoting;
 
+import java.util.Collections;
 import java.util.Locale;
 
 import org.jboss.as.controller.AttributeDefinition;
@@ -72,8 +73,9 @@ public class RemotingSubsystemRootResource extends SimpleResourceDefinition {
             WORKER_WRITE_THREADS
     };
 
+    static final String IO_CAPABILITY = "org.wildfly.extension.io";
     static final RuntimeCapability<RemotingCapability> REMOTING_CAPABILITY =
-            new RuntimeCapability<RemotingCapability>("org.wildfly.extension.remoting", new RemotingCapability()) {
+            new RuntimeCapability<RemotingCapability>("org.wildfly.extension.remoting", new RemotingCapability(), Collections.singleton(IO_CAPABILITY)) {
         @Override
         public String getDescription(Locale locale) {
             RemotingLogger i18n = Logger.getMessageLogger(RemotingLogger.class, "", locale);
