@@ -32,8 +32,10 @@ import java.util.Map;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PersistentResourceDefinition;
 import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
+import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.dmr.ModelNode;
 import org.xnio.Options;
+import org.xnio.XnioWorker;
 
 /**
  * @author <a href="mailto:tomaz.cerar@redhat.com">Tomaz Cerar</a> (c) 2012 Red Hat Inc.
@@ -53,9 +55,7 @@ class WorkerResourceDefinition extends PersistentResourceDefinition {
             .build();
     static final OptionAttributeDefinition WORKER_IO_THREADS = new OptionAttributeDefinition.Builder(Constants.WORKER_IO_THREADS, Options.WORKER_IO_THREADS)
             .build();
-    /*static final OptionAttributeDefinition WORKER_TASK_LIMIT = new OptionAttributeDefinition.Builder(Constants.WORKER_TASK_LIMIT, Options.WORKER_TASK_LIMIT)
-            .setDefaultValue(new ModelNode(0x4000))
-            .build();*/
+    static final RuntimeCapability<XnioWorker> WORKER_CAPABILITY_RUNTIME_CAPABILITY = new IOWorkerCapability();
 
     static OptionAttributeDefinition[] ATTRIBUTES = new OptionAttributeDefinition[]{
             WORKER_IO_THREADS,
@@ -83,7 +83,7 @@ class WorkerResourceDefinition extends PersistentResourceDefinition {
         super(IOExtension.WORKER_PATH,
                 IOExtension.getResolver(Constants.WORKER),
                 WorkerAdd.INSTANCE,
-                ReloadRequiredRemoveStepHandler.INSTANCE
+                new ReloadRequiredRemoveStepHandler(WorkerResourceDefinition.WORKER_CAPABILITY_RUNTIME_CAPABILITY)
         );
     }
 

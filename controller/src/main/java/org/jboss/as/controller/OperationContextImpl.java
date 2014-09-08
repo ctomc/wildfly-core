@@ -102,6 +102,7 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.PlaceholderResource;
 import org.jboss.as.controller.registry.Resource;
+import org.jboss.as.controller.services.DelegatingServiceBuilder;
 import org.jboss.as.core.security.AccessMechanism;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.inject.Injector;
@@ -143,16 +144,22 @@ final class OperationContextImpl extends AbstractOperationContext {
     private final ModelControllerImpl modelController;
     private final EnumSet<ContextFlag> contextFlags;
     private final OperationMessageHandler messageHandler;
-    private final ServiceTarget serviceTarget;
+    private final CapabilitiesServiceTarget serviceTarget;
     private final Map<ServiceName, ServiceController<?>> realRemovingControllers = new HashMap<ServiceName, ServiceController<?>>();
     // protected by "realRemovingControllers"
     private final Map<ServiceName, Step> removalSteps = new HashMap<ServiceName, Step>();
     private final OperationAttachments attachments;
-    /** Tracks whether any steps have gotten write access to the model */
+    /**
+     * Tracks whether any steps have gotten write access to the model
+     */
     private final Map<PathAddress, Object> affectsModel;
-    /** Resources that have had their services restarted, used by ALLOW_RESOURCE_SERVICE_RESTART This should be confined to a thread, so no sync needed */
+    /**
+     * Resources that have had their services restarted, used by ALLOW_RESOURCE_SERVICE_RESTART This should be confined to a thread, so no sync needed
+     */
     private Map<PathAddress, Object> restartedResources = Collections.emptyMap();
-    /** A concurrent map for the attachments. **/
+    /**
+     * A concurrent map for the attachments. *
+     */
     private final ConcurrentMap<AttachmentKey<?>, Object> valueAttachments = new ConcurrentHashMap<AttachmentKey<?>, Object>();
     private final Map<OperationId, AuthorizationResponseImpl> authorizations =
             new ConcurrentHashMap<OperationId, AuthorizationResponseImpl>();
@@ -161,30 +168,46 @@ final class OperationContextImpl extends AbstractOperationContext {
     private final long startTime = System.nanoTime();
     private volatile long exclusiveStartTime = -1;
 
-    /** Tracks whether any steps have gotten write access to the management resource registration*/
+    /**
+     * Tracks whether any steps have gotten write access to the management resource registration
+     */
     private volatile boolean affectsResourceRegistration;
-    /** Tracks whether any steps have modify the capability registry */
+    /**
+     * Tracks whether any steps have modify the capability registry
+     */
     private volatile boolean affectsCapabilityRegistry;
 
     private volatile ModelControllerImpl.ManagementModelImpl managementModel;
 
     private volatile ModelControllerImpl.ManagementModelImpl originalModel;
 
-    /** Tracks the relationship between domain resources and hosts and server groups */
+    /**
+     * Tracks the relationship between domain resources and hosts and server groups
+     */
     private volatile HostServerGroupTracker hostServerGroupTracker;
 
-    /** Tracks whether any steps have gotten write access to the runtime */
+    /**
+     * Tracks whether any steps have gotten write access to the runtime
+     */
     private volatile boolean affectsRuntime;
-    /** The step that acquired the write lock */
+    /**
+     * The step that acquired the write lock
+     */
     private Step lockStep;
-    /** The step that acquired the container monitor  */
+    /**
+     * The step that acquired the container monitor
+     */
     private Step containerMonitorStep;
     private volatile Boolean requiresModelUpdateAuthorization;
     private volatile boolean readOnly = true;
 
-    /** Associates a requirement for a capability with the step that added it */
+    /**
+     * Associates a requirement for a capability with the step that added it
+     */
     private final ConcurrentMap<CapabilityId, Set<Step>> addedRequirements = new ConcurrentHashMap<>();
-    /** Associates a removed capability with the step that removed it */
+    /**
+     * Associates a removed capability with the step that removed it
+     */
     private final ConcurrentMap<CapabilityId, Step> removedCapabilities = new ConcurrentHashMap<>();
 
     /**
@@ -290,7 +313,7 @@ final class OperationContextImpl extends AbstractOperationContext {
                             set = new HashSet<>();
                             missingForStep.put(step, set);
                         }
-                       set.add(required);
+                        set.add(required);
                     }
                 }
             }
@@ -409,7 +432,7 @@ final class OperationContextImpl extends AbstractOperationContext {
 
         authorize(false, READ_WRITE_CONFIG);
         ensureLocalManagementResourceRegistration();
-        ManagementResourceRegistration mrr =  managementModel.getRootResourceRegistration();
+        ManagementResourceRegistration mrr = managementModel.getRootResourceRegistration();
         ManagementResourceRegistration delegate = absoluteAddress == null ? mrr : mrr.getSubModel(absoluteAddress);
         return new DescriptionCachingResourceRegistration(delegate, absoluteAddress);
 
@@ -444,7 +467,7 @@ final class OperationContextImpl extends AbstractOperationContext {
         Stage currentStage = this.currentStage;
         assertNotComplete(currentStage);
         // TODO why do we allow Stage.MODEL?
-        if (! (!modify || currentStage == Stage.RUNTIME || currentStage == Stage.MODEL || currentStage == Stage.VERIFY || isRollingBack())) {
+        if (!(!modify || currentStage == Stage.RUNTIME || currentStage == Stage.MODEL || currentStage == Stage.VERIFY || isRollingBack())) {
             throw ControllerLogger.ROOT_LOGGER.serviceRegistryRuntimeOperationsOnly();
         }
         authorize(false, modify ? READ_WRITE_RUNTIME : READ_RUNTIME);
@@ -474,7 +497,7 @@ final class OperationContextImpl extends AbstractOperationContext {
 
     @Override
     public boolean markResourceRestarted(PathAddress resource, Object owner) {
-        if (restartedResources.containsKey(resource) ) {
+        if (restartedResources.containsKey(resource)) {
             return false;
         }
 
@@ -543,7 +566,7 @@ final class OperationContextImpl extends AbstractOperationContext {
         });
     }
 
-    public ServiceTarget getServiceTarget() throws UnsupportedOperationException {
+    public CapabilitiesServiceTarget getServiceTarget() throws UnsupportedOperationException {
 
         readOnly = false;
 
@@ -574,7 +597,7 @@ final class OperationContextImpl extends AbstractOperationContext {
                 // let op 3 block for the time needed for both 1 and 2
 //                int timeout = blockingTimeout.getBlockingTimeout();
 //                if (timeout < 1) {
-                    modelController.acquireLock(operationId, respectInterruption);
+                modelController.acquireLock(operationId, respectInterruption);
 //                } else {
 //                    // Wait longer than the standard amount to get a chance to execute
 //                    // after whatever was holding the lock times out
@@ -671,35 +694,35 @@ final class OperationContextImpl extends AbstractOperationContext {
         }
         Resource model = this.managementModel.getRootResource();
         final Iterator<PathElement> iterator = address.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             final PathElement element = iterator.next();
             // Allow wildcard navigation for the last element
-            if(element.isWildcard() && ! iterator.hasNext()) {
+            if (element.isWildcard() && !iterator.hasNext()) {
                 final Set<Resource.ResourceEntry> children = model.getChildren(element.getKey());
-                if(children.isEmpty()) {
-                    final PathAddress parent = address.subAddress(0, address.size() -1);
+                if (children.isEmpty()) {
+                    final PathAddress parent = address.subAddress(0, address.size() - 1);
                     final Set<String> childrenTypes = managementModel.getRootResourceRegistration().getChildNames(parent);
-                    if(! childrenTypes.contains(element.getKey())) {
+                    if (!childrenTypes.contains(element.getKey())) {
                         throw ControllerLogger.ROOT_LOGGER.managementResourceNotFound(address);
                     }
                     // Return an empty model
                     return Resource.Factory.create();
                 }
                 model = Resource.Factory.create();
-                for(final Resource.ResourceEntry entry : children) {
+                for (final Resource.ResourceEntry entry : children) {
                     model.registerChild(entry.getPathElement(), entry);
                 }
             } else {
                 model = requireChild(model, element, address);
             }
         }
-        if(recursive) {
+        if (recursive) {
             return model.clone();
         } else {
             final Resource copy = Resource.Factory.create();
             copy.writeModel(model.getModel());
-            for(final String childType : model.getChildTypes()) {
-                for(final Resource.ResourceEntry child : model.getChildren(childType)) {
+            for (final String childType : model.getChildTypes()) {
+                for (final Resource.ResourceEntry child : model.getChildren(childType)) {
                     copy.registerChild(child.getPathElement(), PlaceholderResource.INSTANCE);
                 }
             }
@@ -739,7 +762,7 @@ final class OperationContextImpl extends AbstractOperationContext {
 
     private boolean isResourceRuntimeOnly(PathAddress fullAddress) {
         Resource resource = this.managementModel.getRootResource();
-        for (Iterator<PathElement> it = fullAddress.iterator(); it.hasNext() && resource != null;) {
+        for (Iterator<PathElement> it = fullAddress.iterator(); it.hasNext() && resource != null; ) {
             PathElement element = it.next();
             if (element.isMultiTarget()) {
                 resource = null;
@@ -799,14 +822,14 @@ final class OperationContextImpl extends AbstractOperationContext {
             if (element.isMultiTarget()) {
                 throw ControllerLogger.ROOT_LOGGER.cannotWriteTo("*");
             }
-            if (! i.hasNext()) {
+            if (!i.hasNext()) {
                 final String key = element.getKey();
-                if(model.hasChild(element)) {
+                if (model.hasChild(element)) {
                     throw ControllerLogger.ROOT_LOGGER.duplicateResourceAddress(absoluteAddress);
                 } else {
-                    final PathAddress parent = absoluteAddress.subAddress(0, absoluteAddress.size() -1);
+                    final PathAddress parent = absoluteAddress.subAddress(0, absoluteAddress.size() - 1);
                     final Set<String> childrenNames = managementModel.getRootResourceRegistration().getChildNames(parent);
-                    if(!childrenNames.contains(key)) {
+                    if (!childrenNames.contains(key)) {
                         throw ControllerLogger.ROOT_LOGGER.noChildType(key);
                     }
                     model.registerChild(element, toAdd);
@@ -858,7 +881,7 @@ final class OperationContextImpl extends AbstractOperationContext {
             if (element.isMultiTarget()) {
                 throw ControllerLogger.ROOT_LOGGER.cannotRemove("*");
             }
-            if (! i.hasNext()) {
+            if (!i.hasNext()) {
                 model = model.removeChild(element);
             } else {
                 model = requireChild(model, element, address);
@@ -899,7 +922,7 @@ final class OperationContextImpl extends AbstractOperationContext {
     @Override
     public void report(final MessageSeverity severity, final String message) {
         try {
-            if(messageHandler != null) {
+            if (messageHandler != null) {
                 messageHandler.handleReport(severity, message);
             }
         } catch (Throwable t) {
@@ -924,7 +947,7 @@ final class OperationContextImpl extends AbstractOperationContext {
                 long timeout = getBlockingTimeout().getBlockingTimeout();
                 try {
                     modelController.awaitContainerStability(timeout, TimeUnit.MILLISECONDS, true);
-                }  catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     interrupted = true;
                     MGMT_OP_LOGGER.interruptedWaitingStability();
                 } catch (TimeoutException te) {
@@ -1330,6 +1353,10 @@ final class OperationContextImpl extends AbstractOperationContext {
         return getCapabilityRuntimeAPI(capabilityName, apiType, activeStep);
     }
 
+    <T> RuntimeCapability getRuntimeCapability(String capabilityName, Class<T> apiType) {
+        return null; //todo
+    }
+
     <T> T getCapabilityRuntimeAPI(String capabilityName, Class<T> apiType, Step step) {
         assert isControllingThread();
         assertCapabilitiesAvailable(currentStage);
@@ -1485,7 +1512,7 @@ final class OperationContextImpl extends AbstractOperationContext {
                 hostServerGroupEffect = HostServerGroupTracker.HostServerGroupEffect.forServer(opId.address, serverGroup, host);
             } else {
                 hostServerGroupEffect =
-                    hostServerGroupTracker.getHostServerGroupEffects(opId.address, operation, managementModel.getRootResource());
+                        hostServerGroupTracker.getHostServerGroupEffects(opId.address, operation, managementModel.getRootResource());
             }
             targetResource = TargetResource.forDomain(opId.address, mrr, resource, hostServerGroupEffect, hostServerGroupEffect);
         } else {
@@ -1539,7 +1566,7 @@ final class OperationContextImpl extends AbstractOperationContext {
                 String key0 = pathAddress.getElement(0).getKey();
                 if (SERVER_GROUP.equals(key0)
                         || (pathAddress.size() > 1 && HOST.equals(key0))
-                                && SERVER_CONFIG.equals(pathAddress.getElement(1).getKey())) {
+                        && SERVER_CONFIG.equals(pathAddress.getElement(1).getKey())) {
                     hostServerGroupTracker = new HostServerGroupTracker();
                 }
             }
@@ -1630,7 +1657,7 @@ final class OperationContextImpl extends AbstractOperationContext {
         return context;
     }
 
-    class ContextServiceTarget implements ServiceTarget {
+    class ContextServiceTarget implements CapabilitiesServiceTarget {
 
         private final ModelControllerImpl modelController;
 
@@ -1643,8 +1670,8 @@ final class OperationContextImpl extends AbstractOperationContext {
             return new ContextServiceBuilder<T>(realBuilder, name);
         }
 
-        public <T> ServiceBuilder<T> addService(final ServiceName name, final Service<T> service) {
-            return addServiceValue(name, new ImmediateValue<Service<T>>(service));
+        public <T> CapabilitiesServiceBuilder<T> addService(final ServiceName name, final Service<T> service) throws IllegalArgumentException {
+            return new CapabilitiesServiceBuilderImpl<>(addServiceValue(name, new ImmediateValue<Service<T>>(service)));
         }
 
         public ServiceTarget addMonitor(final StabilityMonitor monitor) {
@@ -1718,118 +1745,15 @@ final class OperationContextImpl extends AbstractOperationContext {
         }
     }
 
-    class ContextServiceBuilder<T> implements ServiceBuilder<T> {
+    class ContextServiceBuilder<T> extends DelegatingServiceBuilder<T> {
 
         private final ServiceBuilder<T> realBuilder;
         private final ServiceName name;
 
         ContextServiceBuilder(final ServiceBuilder<T> realBuilder, final ServiceName name) {
+            super(realBuilder);
             this.realBuilder = realBuilder;
             this.name = name;
-        }
-
-        public ServiceBuilder<T> addAliases(final ServiceName... aliases) {
-            realBuilder.addAliases(aliases);
-            return this;
-        }
-
-        public ServiceBuilder<T> setInitialMode(final ServiceController.Mode mode) {
-            realBuilder.setInitialMode(mode);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependencies(final ServiceName... dependencies) {
-            realBuilder.addDependencies(dependencies);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependencies(final DependencyType dependencyType, final ServiceName... dependencies) {
-            realBuilder.addDependencies(dependencyType, dependencies);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependencies(final Iterable<ServiceName> dependencies) {
-            realBuilder.addDependencies(dependencies);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependencies(final DependencyType dependencyType, final Iterable<ServiceName> dependencies) {
-            realBuilder.addDependencies(dependencyType, dependencies);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependency(final ServiceName dependency) {
-            realBuilder.addDependency(dependency);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependency(final DependencyType dependencyType, final ServiceName dependency) {
-            realBuilder.addDependency(dependencyType, dependency);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependency(final ServiceName dependency, final Injector<Object> target) {
-            realBuilder.addDependency(dependency, target);
-            return this;
-        }
-
-        public ServiceBuilder<T> addDependency(final DependencyType dependencyType, final ServiceName dependency, final Injector<Object> target) {
-            realBuilder.addDependency(dependencyType, dependency, target);
-            return this;
-        }
-
-        public <I> ServiceBuilder<T> addDependency(final ServiceName dependency, final Class<I> type, final Injector<I> target) {
-            realBuilder.addDependency(dependency, type, target);
-            return this;
-        }
-
-        public <I> ServiceBuilder<T> addDependency(final DependencyType dependencyType, final ServiceName dependency, final Class<I> type, final Injector<I> target) {
-            realBuilder.addDependency(dependencyType, dependency, type, target);
-            return this;
-        }
-
-        public <I> ServiceBuilder<T> addInjection(final Injector<? super I> target, final I value) {
-            realBuilder.addInjection(target, value);
-            return this;
-        }
-
-        public <I> ServiceBuilder<T> addInjectionValue(final Injector<? super I> target, final Value<I> value) {
-            realBuilder.addInjectionValue(target, value);
-            return this;
-        }
-
-        public ServiceBuilder<T> addInjection(final Injector<? super T> target) {
-            realBuilder.addInjection(target);
-            return this;
-        }
-
-        public ServiceBuilder<T> addMonitor(StabilityMonitor monitor) {
-            realBuilder.addMonitor(monitor);
-            return this;
-        }
-
-        public ServiceBuilder<T> addMonitors(StabilityMonitor... monitors) {
-            realBuilder.addMonitors(monitors);
-            return this;
-        }
-
-        @SuppressWarnings("deprecation")
-        public ServiceBuilder<T> addListener(final ServiceListener<? super T> listener) {
-            realBuilder.addListener(listener);
-            return this;
-        }
-
-        @SafeVarargs
-        @SuppressWarnings("deprecation")
-        public final ServiceBuilder<T> addListener(final ServiceListener<? super T>... listeners) {
-            realBuilder.addListener(listeners);
-            return this;
-        }
-
-        @SuppressWarnings("deprecation")
-        public ServiceBuilder<T> addListener(final Collection<? extends ServiceListener<? super T>> listeners) {
-            realBuilder.addListener(listeners);
-            return this;
         }
 
         public ServiceController<T> install() throws ServiceRegistryException, IllegalStateException {
@@ -1873,7 +1797,9 @@ final class OperationContextImpl extends AbstractOperationContext {
         }
     }
 
-    /** Verifies that any service removals performed by this operation did not trigger a missing dependency */
+    /**
+     * Verifies that any service removals performed by this operation did not trigger a missing dependency
+     */
     private class ServiceRemovalVerificationHandler implements OperationStepHandler {
 
         private final ContainerStateMonitor.ContainerStateChangeReport containerStateChangeReport;
@@ -1980,7 +1906,7 @@ final class OperationContextImpl extends AbstractOperationContext {
         }
 
         public boolean compareAndSetMode(Mode expected,
-                org.jboss.msc.service.ServiceController.Mode newMode) {
+                                         org.jboss.msc.service.ServiceController.Mode newMode) {
             checkModeTransition(newMode);
             return controller.compareAndSetMode(expected, newMode);
         }
@@ -2186,7 +2112,9 @@ final class OperationContextImpl extends AbstractOperationContext {
 
     }
 
-    /** DescriptionProvider that caches any generated description in our internal cache */
+    /**
+     * DescriptionProvider that caches any generated description in our internal cache
+     */
     private class CachingDescriptionProvider implements DescriptionProvider {
         private final PathAddress cacheAddress;
         private final DescriptionProvider delegate;
@@ -2205,8 +2133,10 @@ final class OperationContextImpl extends AbstractOperationContext {
         }
     }
 
-    /** ImmutableManagementResourceRegistration that caches any generated resource description in our internal cache */
-    private class DescriptionCachingImmutableResourceRegistration extends DelegatingImmutableManagementResourceRegistration  {
+    /**
+     * ImmutableManagementResourceRegistration that caches any generated resource description in our internal cache
+     */
+    private class DescriptionCachingImmutableResourceRegistration extends DelegatingImmutableManagementResourceRegistration {
 
         private final PathAddress address;
 
@@ -2214,7 +2144,7 @@ final class OperationContextImpl extends AbstractOperationContext {
          * Creates a new DescriptionCachingImmutableResourceRegistration.
          *
          * @param delegate the delegate. Cannot be {@code null}
-         * @param address the address of the resource registration. Cannot be {@code null}
+         * @param address  the address of the resource registration. Cannot be {@code null}
          */
         public DescriptionCachingImmutableResourceRegistration(ImmutableManagementResourceRegistration delegate, PathAddress address) {
             super(delegate);
@@ -2229,7 +2159,9 @@ final class OperationContextImpl extends AbstractOperationContext {
         }
     }
 
-    /** ManagementResourceRegistration that caches any generated resource description in our internal cache */
+    /**
+     * ManagementResourceRegistration that caches any generated resource description in our internal cache
+     */
     private class DescriptionCachingResourceRegistration extends DelegatingManagementResourceRegistration {
 
         private final PathAddress address;
@@ -2238,7 +2170,7 @@ final class OperationContextImpl extends AbstractOperationContext {
          * Creates a new DescriptionCachingResourceRegistration.
          *
          * @param delegate the delegate. Cannot be {@code null}
-         * @param address the address of the resource registration. Cannot be {@code null}
+         * @param address  the address of the resource registration. Cannot be {@code null}
          */
         public DescriptionCachingResourceRegistration(ManagementResourceRegistration delegate, PathAddress address) {
             super(delegate);
@@ -2314,7 +2246,7 @@ final class OperationContextImpl extends AbstractOperationContext {
         private boolean done = false;
     }
 
-    private static class ProfileCapabilityContext implements CapabilityContext {
+    private class ProfileCapabilityContext implements CapabilityContext {
         private final String profileName;
 
         private ProfileCapabilityContext(String profileName) {
@@ -2339,5 +2271,30 @@ final class OperationContextImpl extends AbstractOperationContext {
             return getClass().getSimpleName() + "{" + getName() + "}";
         }
 
+    }
+
+    class CapabilitiesServiceBuilderImpl<T> extends DelegatingServiceBuilder<T> implements CapabilitiesServiceBuilder<T> {
+        public CapabilitiesServiceBuilderImpl(ServiceBuilder<T> delegate) {
+            super(delegate);
+        }
+
+        @Override
+        public <I> CapabilitiesServiceBuilder<T> addCapabilityRequirement(RuntimeCapability<I> capability, String referenceName, Class<I> type, Injector<I> target) {
+            addDependency(capability.getServiceName(referenceName), type, target);
+            return this;
+        }
+
+        public <I> CapabilitiesServiceBuilder<T> addCapabilityRequirement(String capabilityName, String referenceName, Injector<I> target) {
+            RuntimeCapability capability = getRuntimeCapability(capabilityName, Object.class);
+            addDependency(capability.getServiceName(referenceName), capability.getClassType(), target);
+            return this;
+        }
+
+        @Override
+        public <I> CapabilitiesServiceBuilder<T> addCapabilityRequirement(String capabilityName, Injector<I> target) {
+            RuntimeCapability capability = getRuntimeCapability(capabilityName, Object.class);
+            addDependency(capability.getBaseServiceName(), capability.getClassType(), target);
+            return this;
+        }
     }
 }

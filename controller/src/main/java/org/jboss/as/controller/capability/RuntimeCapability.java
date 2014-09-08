@@ -24,29 +24,33 @@ package org.jboss.as.controller.capability;
 
 import java.util.Set;
 
+import org.jboss.msc.service.ServiceName;
+
 /**
  * A capability exposed in a running WildFly process.
  *
  * @param <T> the type of the runtime API object exposed by the capability
- *
  * @author Brian Stansberry (c) 2014 Red Hat Inc.
  */
-public abstract class RuntimeCapability<T> extends AbstractCapability  {
+public abstract class RuntimeCapability<T> extends AbstractCapability {
 
-    private final T runtimeAPI;
+    private final Class<T> classType;
+    private final ServiceName baseServiceName;
 
-    protected RuntimeCapability(String name, T runtimeAPI, Set<String> requirements, Set<String> optionalRequirements) {
+    protected RuntimeCapability(String name, Class<T> runtimeAPI, Set<String> requirements, Set<String> optionalRequirements, ServiceName baseServiceName) {
         super(name, requirements, optionalRequirements);
-        this.runtimeAPI = runtimeAPI;
+        this.baseServiceName = baseServiceName;
+        this.classType = runtimeAPI;
     }
 
-    protected RuntimeCapability(String name, T runtimeAPI, Set<String> requirements) {
-        this(name, runtimeAPI, requirements, null);
+    protected RuntimeCapability(String name, Class<T> runtimeAPI, Set<String> requirements, ServiceName baseServiceName) {
+        this(name, runtimeAPI, requirements, null, baseServiceName);
     }
 
-    protected RuntimeCapability(String name, T runtimeAPI, String... requirements) {
+    protected RuntimeCapability(String name, Class<T> runtimeAPI, ServiceName baseServiceName, String... requirements) {
         super(name, requirements);
-        this.runtimeAPI = runtimeAPI;
+        this.classType = runtimeAPI;
+        this.baseServiceName = baseServiceName;
     }
 
     /**
@@ -56,6 +60,18 @@ public abstract class RuntimeCapability<T> extends AbstractCapability  {
      * @return the API object, or {@code null} if the capability exposes no API to other capabilities
      */
     public T getRuntimeAPI() {
-        return runtimeAPI;
+        return null;//todo
+    }
+
+    public Class<T> getClassType() {
+        return classType;
+    }
+
+    public ServiceName getBaseServiceName() {
+        return baseServiceName;
+    }
+
+    public ServiceName getServiceName(String name){
+        return baseServiceName.append(name);
     }
 }

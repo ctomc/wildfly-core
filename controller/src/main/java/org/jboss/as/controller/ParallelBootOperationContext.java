@@ -43,7 +43,6 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.jboss.msc.service.ServiceTarget;
 
 /**
  * {@link OperationContext} implementation for parallel handling of subsystem operations during boot.
@@ -183,7 +182,7 @@ class ParallelBootOperationContext extends AbstractOperationContext {
     }
 
     @Override
-    public ServiceTarget getServiceTarget() throws UnsupportedOperationException {
+    public CapabilitiesServiceTarget getServiceTarget() throws UnsupportedOperationException {
         acquireControllerLock();
         return primaryContext.getServiceTarget();
     }

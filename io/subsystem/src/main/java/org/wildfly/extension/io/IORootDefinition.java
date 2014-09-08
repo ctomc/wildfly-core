@@ -28,29 +28,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PersistentResourceDefinition;
 import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
-import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.registry.OperationEntry;
-import org.jboss.logging.Logger;
-import org.wildfly.extension.io.logging.IOLogger;
 
 /**
  * @author <a href="mailto:tomaz.cerar@redhat.com">Tomaz Cerar</a> (c) 2013 Red Hat Inc.
  */
 class IORootDefinition extends PersistentResourceDefinition {
-
-    static final RuntimeCapability<IOCapability> IO_CAPABILITY_RUNTIME_CAPABILITY =
-            new RuntimeCapability<IOCapability>("org.wildfly.extension.io", new IOCapability()) {
-                @Override
-                public String getDescription(Locale locale) {
-                    IOLogger i18n = Logger.getMessageLogger(IOLogger.class, "", locale);
-                    return i18n.ioCapability();
-                }
-            };
 
     static final IORootDefinition INSTANCE = new IORootDefinition();
 
@@ -63,7 +50,7 @@ class IORootDefinition extends PersistentResourceDefinition {
         super(IOExtension.SUBSYSTEM_PATH,
                 IOExtension.getResolver(),
                 IOSubsystemAdd.INSTANCE,
-                new ReloadRequiredRemoveStepHandler(IO_CAPABILITY_RUNTIME_CAPABILITY),
+                new ReloadRequiredRemoveStepHandler(WorkerResourceDefinition.WORKER_CAPABILITY_RUNTIME_CAPABILITY),
                 OperationEntry.Flag.RESTART_NONE,
                 OperationEntry.Flag.RESTART_ALL_SERVICES);
     }

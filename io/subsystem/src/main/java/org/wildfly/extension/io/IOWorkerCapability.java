@@ -22,39 +22,19 @@
 
 package org.wildfly.extension.io;
 
-import org.jboss.msc.service.ServiceName;
+import org.jboss.as.controller.capability.RuntimeCapability;
+import org.xnio.XnioWorker;
 
 /**
  * API exposed as a {@link org.jboss.as.controller.capability.RuntimeCapability} by the IO subsystem
  * for use by other subsystems.
  *
  * @author Brian Stansberry (c) 2014 Red Hat Inc.
+ * @author Tomaz Cerar
  */
-public class IOCapability {
+public class IOWorkerCapability extends RuntimeCapability<XnioWorker> {
 
-    /**
-     * Gets the {@link org.jboss.msc.service.ServiceName name} of the service whose
-     * {@link org.jboss.msc.service.Service#getValue() value} is
-     * an {@link org.xnio.XnioWorker} provided by this capability.
-     *
-     * @param workerName the name of the specific worker that is desired. Cannot be {@code null}
-     *
-     * @return the service name. Will not be {@code null}
-     */
-    public ServiceName getXnioWorkerServiceName(String workerName) {
-        return IOServices.WORKER.append(workerName);
-    }
-
-    /**
-     * Gets the {@link org.jboss.msc.service.ServiceName name} of the service whose
-     * {@link org.jboss.msc.service.Service#getValue() value} is
-     * a {@link org.xnio.Pool pool} of {@link java.nio.ByteBuffer byte buffers} provided by this capability.
-     *
-     * @param bufferPoolName the name of the specific buffer pool that is desired. Cannot be {@code null}
-     *
-     * @return the service name. Will not be {@code null}
-     */
-    public ServiceName getBufferPoolServiceName(String bufferPoolName) {
-        return IOServices.BUFFER_POOL.append(bufferPoolName);
+    public IOWorkerCapability() {
+        super("io-worker", XnioWorker.class, IOServices.WORKER);
     }
 }

@@ -41,7 +41,6 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.jboss.msc.service.ServiceTarget;
 
 /**
  * A read-only {@linkplain OperationContext}, allowing read-only access to the current write model from a different
@@ -156,7 +155,7 @@ class ReadOnlyContext extends AbstractOperationContext {
     }
 
     @Override
-    public ServiceTarget getServiceTarget() throws UnsupportedOperationException {
+    public CapabilitiesServiceTarget getServiceTarget() throws UnsupportedOperationException {
         return primaryContext.getServiceTarget();
     }
 

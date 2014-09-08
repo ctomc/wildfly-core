@@ -26,6 +26,8 @@ import java.util.List;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.CapabilitiesServiceBuilder;
+import org.jboss.as.controller.CapabilitiesServiceTarget;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
@@ -33,14 +35,10 @@ import org.jboss.as.controller.ProcessType;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.dmr.ModelNode;
-import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceTarget;
 import org.jboss.remoting3.Endpoint;
-import org.wildfly.extension.io.IOCapability;
 import org.wildfly.security.manager.WildFlySecurityManager;
 import org.xnio.OptionMap;
-import org.xnio.XnioWorker;
 
 /**
  * Add operation handler for the remoting subsystem.
@@ -80,7 +78,7 @@ class RemotingSubsystemAdd extends AbstractAddStepHandler {
 
         final OptionMap map = EndpointConfigFactory.populate(context, endpointModel);
 
-        final ServiceTarget serviceTarget = context.getServiceTarget();
+        final CapabilitiesServiceTarget serviceTarget = context.getServiceTarget();
 
         // create endpoint
         final String nodeName = WildFlySecurityManager.getPropertyPrivileged(RemotingExtension.NODE_NAME_PROPERTY, null);
@@ -95,10 +93,8 @@ class RemotingSubsystemAdd extends AbstractAddStepHandler {
             }
         }
 
-        IOCapability ioCapability = context.getCapabilityRuntimeAPI(RemotingSubsystemRootResource.IO_CAPABILITY, IOCapability.class);
-
-        final ServiceBuilder<Endpoint> builder = serviceTarget.addService(RemotingServices.SUBSYSTEM_ENDPOINT, endpointService)
-                .addDependency(ioCapability.getXnioWorkerServiceName(workerName), XnioWorker.class, endpointService.getWorker());
+        final CapabilitiesServiceBuilder<Endpoint> builder = serviceTarget.addService(RemotingServices.SUBSYSTEM_ENDPOINT, endpointService)
+                .addCapabilityRequirement(RemotingSubsystemRootResource.IO_CAPABILITY, workerName, endpointService.getWorker());
 
         if (verificationHandler != null) {
             builder.addListener(verificationHandler);

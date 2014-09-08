@@ -101,7 +101,9 @@ public abstract class AbstractCapability {
      *
      * @throws java.lang.IllegalArgumentException if {@code locale} is {@code null}
      */
-    public abstract String getDescription(Locale locale);
+    public String getDescription(Locale locale){
+        return name;
+    }
 
     /**
      * {@inheritDoc}

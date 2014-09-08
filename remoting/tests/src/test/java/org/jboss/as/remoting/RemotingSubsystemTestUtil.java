@@ -30,7 +30,7 @@ import org.jboss.as.controller.extension.ExtensionRegistry;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
-import org.wildfly.extension.io.IOCapability;
+import org.wildfly.extension.io.IOWorkerCapability;
 
 /**
  * Utilities for the remoting subsystem tests.
@@ -54,7 +54,7 @@ class RemotingSubsystemTestUtil {
                 protected void initializeExtraSubystemsAndModel(ExtensionRegistry extensionRegistry, Resource rootResource, ManagementResourceRegistration rootRegistration, RuntimeCapabilityRegistry capabilityRegistry) {
                     super.initializeExtraSubystemsAndModel(extensionRegistry, rootResource, rootRegistration, capabilityRegistry);
                     AdditionalInitialization.registerCapabilities(capabilityRegistry,
-                            Collections.singletonMap(RemotingSubsystemRootResource.IO_CAPABILITY, (Object) new IOCapability()));
+                            Collections.singletonMap(RemotingSubsystemRootResource.IO_CAPABILITY, (Object) new IOWorkerCapability()));
                 }
             };
 

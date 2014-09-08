@@ -58,7 +58,7 @@ class WorkerAdd extends AbstractAddStepHandler {
     static final WorkerAdd INSTANCE = new WorkerAdd();
 
     private WorkerAdd() {
-
+        super(WorkerResourceDefinition.WORKER_CAPABILITY_RUNTIME_CAPABILITY);
     }
 
     @Override

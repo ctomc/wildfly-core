@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.CapabilitiesServiceTarget;
 import org.jboss.as.controller.ControlledProcessState;
 import org.jboss.as.controller.NoopOperationStepHandler;
 import org.jboss.as.controller.NotificationDefinition;
@@ -98,7 +99,6 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.jboss.msc.service.ServiceTarget;
 
 /**
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
@@ -390,7 +390,7 @@ public abstract class AbstractOperationTestCase {
         public void removeService(ServiceController<?> controller) throws UnsupportedOperationException {
         }
 
-        public ServiceTarget getServiceTarget() throws UnsupportedOperationException {
+        public CapabilitiesServiceTarget getServiceTarget() throws UnsupportedOperationException {
             return null;
         }
 

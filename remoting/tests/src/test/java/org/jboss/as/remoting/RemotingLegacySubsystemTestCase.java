@@ -64,7 +64,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceNotFoundException;
 import org.jboss.msc.service.ServiceTarget;
 import org.junit.Test;
-import org.wildfly.extension.io.IOCapability;
+import org.wildfly.extension.io.IOWorkerCapability;
 import org.wildfly.extension.io.IOServices;
 import org.wildfly.extension.io.WorkerService;
 import org.xnio.OptionMap;
@@ -282,7 +282,7 @@ public class RemotingLegacySubsystemTestCase extends AbstractSubsystemBaseTest {
             protected void initializeExtraSubystemsAndModel(ExtensionRegistry extensionRegistry, Resource rootResource, ManagementResourceRegistration rootRegistration, RuntimeCapabilityRegistry capabilityRegistry) {
                 super.initializeExtraSubystemsAndModel(extensionRegistry, rootResource, rootRegistration, capabilityRegistry);
                 AdditionalInitialization.registerCapabilities(capabilityRegistry,
-                        Collections.singletonMap(RemotingSubsystemRootResource.IO_CAPABILITY, (Object) new IOCapability()));
+                        Collections.singletonMap(RemotingSubsystemRootResource.IO_CAPABILITY, (Object) new IOWorkerCapability()));
             }
         };
     }

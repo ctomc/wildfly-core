@@ -21,9 +21,6 @@
 */
 package org.jboss.as.remoting;
 
-import java.util.Collections;
-import java.util.Locale;
-
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.OperationContext;
@@ -43,10 +40,8 @@ import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.controller.registry.Resource;
-import org.jboss.as.remoting.logging.RemotingLogger;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceName;
 
 /**
@@ -73,15 +68,8 @@ public class RemotingSubsystemRootResource extends SimpleResourceDefinition {
             WORKER_WRITE_THREADS
     };
 
-    static final String IO_CAPABILITY = "org.wildfly.extension.io";
-    static final RuntimeCapability<RemotingCapability> REMOTING_CAPABILITY =
-            new RuntimeCapability<RemotingCapability>("org.wildfly.extension.remoting", new RemotingCapability(), Collections.singleton(IO_CAPABILITY)) {
-        @Override
-        public String getDescription(Locale locale) {
-            RemotingLogger i18n = Logger.getMessageLogger(RemotingLogger.class, "", locale);
-            return i18n.remotingCapability();
-        }
-    };
+    static final String IO_CAPABILITY = "io-worker";
+    static final RuntimeCapability REMOTING_CAPABILITY = new RemotingCapability();
 
     private final ProcessType processType;
 

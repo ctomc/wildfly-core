@@ -58,7 +58,7 @@ public class RemotingConnectorResource extends SimpleResourceDefinition {
 
     static final String REMOTING_CAPABILITY = "org.wildfly.extension.remoting";
     static final RuntimeCapability<Void> REMOTE_JMX_CAPABILITY = new RuntimeCapability<Void>("org.wildfly.extension.jmx.remote", null,
-            Collections.singleton(JMXSubsystemRootResource.JMX_CAPABILITY.getName()), Collections.singleton(REMOTING_CAPABILITY)) {
+            Collections.singleton(JMXSubsystemRootResource.JMX_CAPABILITY.getName()), Collections.singleton(REMOTING_CAPABILITY), baseServiceName) {
         @Override
         public String getDescription(Locale locale) {
             JmxLogger i18n = Logger.getMessageLogger(JmxLogger.class, "", locale);

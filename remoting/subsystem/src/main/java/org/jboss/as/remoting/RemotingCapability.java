@@ -22,7 +22,8 @@
 
 package org.jboss.as.remoting;
 
-import org.jboss.msc.service.ServiceName;
+import org.jboss.as.controller.capability.RuntimeCapability;
+import org.jboss.remoting3.Endpoint;
 
 /**
  * API exposed as a {@link org.jboss.as.controller.capability.RuntimeCapability} by the remoting subsystem
@@ -30,16 +31,14 @@ import org.jboss.msc.service.ServiceName;
  *
  * @author Brian Stansberry (c) 2014 Red Hat Inc.
  */
-public class RemotingCapability {
+public class RemotingCapability extends RuntimeCapability<Endpoint> {
 
-    /**
-     * Gets the {@link org.jboss.msc.service.ServiceName name} of the service whose
-     * {@link org.jboss.msc.service.Service#getValue() value} is
-     * the {@link org.jboss.remoting3.Endpoint} provided by this capability.
-     *
-     * @return the service name. Will not be {@code null}
-     */
-    public ServiceName getEndpointServiceName() {
-        return RemotingServices.SUBSYSTEM_ENDPOINT;
+    public RemotingCapability() {
+        super("org.wildfly.extension.remoting",
+                Endpoint.class,
+                RemotingServices.SUBSYSTEM_ENDPOINT,
+                RemotingSubsystemRootResource.IO_CAPABILITY);
     }
+
+
 }
