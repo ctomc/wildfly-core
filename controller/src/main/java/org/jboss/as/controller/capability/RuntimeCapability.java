@@ -32,19 +32,19 @@ import org.jboss.msc.service.ServiceName;
  * @param <T> the type of the runtime API object exposed by the capability
  * @author Brian Stansberry (c) 2014 Red Hat Inc.
  */
-public abstract class RuntimeCapability<T> extends AbstractCapability {
+public class RuntimeCapability<T> extends AbstractCapability {
 
     private final Class<T> classType;
     private final ServiceName baseServiceName;
 
-    protected RuntimeCapability(String name, Class<T> runtimeAPI, Set<String> requirements, Set<String> optionalRequirements, ServiceName baseServiceName) {
+    protected RuntimeCapability(String name, Class<T> runtimeAPI, ServiceName baseServiceName, Set<String> requirements, Set<String> optionalRequirements) {
         super(name, requirements, optionalRequirements);
         this.baseServiceName = baseServiceName;
         this.classType = runtimeAPI;
     }
 
-    protected RuntimeCapability(String name, Class<T> runtimeAPI, Set<String> requirements, ServiceName baseServiceName) {
-        this(name, runtimeAPI, requirements, null, baseServiceName);
+    protected RuntimeCapability(String name, Class<T> runtimeAPI, ServiceName baseServiceName, Set<String> requirements) {
+        this(name, runtimeAPI, baseServiceName, requirements, null);
     }
 
     protected RuntimeCapability(String name, Class<T> runtimeAPI, ServiceName baseServiceName, String... requirements) {
@@ -59,10 +59,6 @@ public abstract class RuntimeCapability<T> extends AbstractCapability {
      *
      * @return the API object, or {@code null} if the capability exposes no API to other capabilities
      */
-    public T getRuntimeAPI() {
-        return null;//todo
-    }
-
     public Class<T> getClassType() {
         return classType;
     }

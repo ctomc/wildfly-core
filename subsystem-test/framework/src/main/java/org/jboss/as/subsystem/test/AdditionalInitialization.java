@@ -147,13 +147,8 @@ public class AdditionalInitialization extends AdditionalParsers {
         }
     }
 
-    private static <T> RuntimeCapability<T> createCapability(final String capabilityName, final T api) {
-        return new RuntimeCapability<T>(capabilityName, api) {
-            @Override
-            public String getDescription(Locale locale) {
-                return capabilityName;
-            }
-        };
+    private static <T> RuntimeCapability createCapability(final String capabilityName, final T api) {
+        return new RuntimeCapability(capabilityName, api);
     }
 
     /**

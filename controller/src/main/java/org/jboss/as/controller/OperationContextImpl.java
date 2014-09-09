@@ -2278,12 +2278,6 @@ final class OperationContextImpl extends AbstractOperationContext {
             super(delegate);
         }
 
-        @Override
-        public <I> CapabilitiesServiceBuilder<T> addCapabilityRequirement(RuntimeCapability<I> capability, String referenceName, Class<I> type, Injector<I> target) {
-            addDependency(capability.getServiceName(referenceName), type, target);
-            return this;
-        }
-
         public <I> CapabilitiesServiceBuilder<T> addCapabilityRequirement(String capabilityName, String referenceName, Injector<I> target) {
             RuntimeCapability capability = getRuntimeCapability(capabilityName, Object.class);
             addDependency(capability.getServiceName(referenceName), capability.getClassType(), target);
