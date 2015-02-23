@@ -81,7 +81,9 @@
         <version.javax.inject.javax.inject>1</version.javax.inject.javax.inject>
         <version.junit>4.11</version.junit>
         <version.log4j>1.2.16</version.log4j>
-        <version.org.apache.ds>2.0.0-M15</version.org.apache.ds>
+        <version.org.apache.ds>2.0.0-M19</version.org.apache.ds>
+        <version.org.apache.directory.jdbm>2.0.0-M3</version.org.apache.directory.jdbm>
+        <version.org.apache.directory.api>1.0.0-M26</version.org.apache.directory.api>
         <version.org.apache.httpcomponents.httpclient>4.3.6</version.org.apache.httpcomponents.httpclient>
         <version.org.apache.httpcomponents.httpcore>4.3.3</version.org.apache.httpcomponents.httpcore>
         <version.org.apache.maven>3.2.1</version.org.apache.maven>
@@ -193,14 +195,6 @@
 
     <build>
         <plugins>
-            <!-- to deal with type 'bundle' dependencies -->
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <inherited>true</inherited>
-                <extensions>true</extensions>
-            </plugin>
-
            <!-- Zanata translations -->
             <plugin>
               <groupId>org.zanata</groupId>
@@ -904,6 +898,48 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
+            <!-- apache ds -->
+
+            <dependency>
+                <groupId>org.apache.directory.api</groupId>
+                <artifactId>api-ldap-codec-standalone</artifactId>
+                <scope>test</scope>
+                <version>${version.org.apache.directory.api}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.directory.jdbm</groupId>
+                <artifactId>apacheds-jdbm1</artifactId>
+                <scope>test</scope>
+                <version>${version.org.apache.directory.jdbm}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.directory.server</groupId>
+                <artifactId>apacheds-core-annotations</artifactId>
+                <version>${version.org.apache.ds}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.directory.server</groupId>
+                <artifactId>apacheds-interceptor-kerberos</artifactId>
+                <version>${version.org.apache.ds}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.directory.server</groupId>
+                <artifactId>apacheds-server-annotations</artifactId>
+                <version>${version.org.apache.ds}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- apache Http client-->
+
 
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

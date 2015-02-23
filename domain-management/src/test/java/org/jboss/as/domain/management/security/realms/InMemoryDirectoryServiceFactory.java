@@ -113,7 +113,7 @@ public class InMemoryDirectoryServiceFactory implements DirectoryServiceFactory 
 
         // EhCache in disabled-like-mode
         Configuration ehCacheConfig = new Configuration();
-        CacheConfiguration defaultCache = new CacheConfiguration("default", 1).eternal(false).timeToIdleSeconds(30)
+        CacheConfiguration defaultCache = new CacheConfiguration("default", 500).eternal(false).timeToIdleSeconds(30)
                 .timeToLiveSeconds(30).overflowToDisk(false);
         ehCacheConfig.addDefaultCache(defaultCache);
         CacheService cacheService = new CacheService(new CacheManager(ehCacheConfig));
@@ -142,7 +142,7 @@ public class InMemoryDirectoryServiceFactory implements DirectoryServiceFactory 
         }
 
         // Init system partition
-        Partition systemPartition = partitionFactory.createPartition(directoryService.getSchemaManager(), "system",
+        Partition systemPartition = partitionFactory.createPartition(directoryService.getSchemaManager(), directoryService.getDnFactory(), "system",
                 ServerDNConstants.SYSTEM_DN, 500, new File(directoryService.getInstanceLayout().getPartitionsDirectory(),
                         "system"));
         systemPartition.setSchemaManager(directoryService.getSchemaManager());
