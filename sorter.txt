@@ -1,0 +1,1 @@
+mvn com.google.code.sortpom:maven-sortpom-plugin:2.3.0:sort  "-Dsort.keepBlankLines=true" "-Dsort.predefinedSortOrder=default_1_0_0" "-Dsort.nrOfIndentSpace=4"  "-Dsort.sortDependencies=groupId,artifactId"
