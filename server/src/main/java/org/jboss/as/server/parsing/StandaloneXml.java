@@ -527,19 +527,6 @@ public class StandaloneXml extends CommonXml {
                 final String value = reader.getAttributeValue(i);
                 final Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
                 switch (attribute) {
-                    case INTERFACE: {
-                        HttpManagementResourceDefinition.INTERFACE.parseAndSetParameter(value, mgmtSocket, reader);
-                        hasInterfaceName = true;
-                        break;
-                    }
-                    case PORT: {
-                        HttpManagementResourceDefinition.HTTP_PORT.parseAndSetParameter(value, mgmtSocket, reader);
-                        break;
-                    }
-                    case SECURE_PORT: {
-                        HttpManagementResourceDefinition.HTTPS_PORT.parseAndSetParameter(value, mgmtSocket, reader);
-                        break;
-                    }
                     case MAX_THREADS: {
                         // ignore xsd mistake
                         break;
@@ -583,18 +570,6 @@ public class StandaloneXml extends CommonXml {
                 final String value = reader.getAttributeValue(i);
                 final Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
                 switch (attribute) {
-                    case INTERFACE: {
-                        NativeManagementResourceDefinition.INTERFACE.parseAndSetParameter(value, mgmtSocket, reader);
-                        hasInterface = true;
-                        break;
-                    }
-                    case PORT: {
-                        NativeManagementResourceDefinition.NATIVE_PORT.parseAndSetParameter(value, mgmtSocket, reader);
-                        break;
-                    }
-                    case SECURE_PORT:
-                        // ignore -- this was a bug in the xsd
-                        break;
                     case SECURITY_REALM: {
                         NativeManagementResourceDefinition.SECURITY_REALM.parseAndSetParameter(value, mgmtSocket, reader);
                         break;
@@ -863,10 +838,14 @@ public class StandaloneXml extends CommonXml {
             final Element element = Element.forName(reader.getLocalName());
             switch (element) {
                 case SOCKET:
-                    if (http) {
-                        parseHttpManagementSocket(reader, addOp);
+                    if (expectedNs.getMajorVersion() < 3) {// we only support socket-binding in 3+
+                        if (http) {
+                            parseHttpManagementSocket(reader, addOp);
+                        } else {
+                            parseNativeManagementSocket(reader, addOp);
+                        }
                     } else {
-                        parseNativeManagementSocket(reader, addOp);
+                        throw unexpectedElement(reader);
                     }
                     break;
                 case SOCKET_BINDING:
@@ -886,74 +865,19 @@ public class StandaloneXml extends CommonXml {
 
     private void parseNativeManagementSocket(XMLExtendedStreamReader reader, ModelNode addOp) throws XMLStreamException {
         // Handle attributes
-        boolean hasInterface = false;
-
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
-            final String value = reader.getAttributeValue(i);
-            if (!isNoNamespaceAttribute(reader, i)) {
-                throw unexpectedAttribute(reader, i);
-            } else {
-                final Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
-                switch (attribute) {
-                    case INTERFACE: {
-                        NativeManagementResourceDefinition.INTERFACE.parseAndSetParameter(value, addOp, reader);
-                        hasInterface = true;
-                        break;
-                    }
-                    case PORT: {
-                        NativeManagementResourceDefinition.NATIVE_PORT.parseAndSetParameter(value, addOp, reader);
-                        break;
-                    }
-                    default:
-                        throw unexpectedAttribute(reader, i);
-                }
-            }
+            throw unexpectedAttribute(reader, i);
         }
-
         requireNoContent(reader);
-
-        if (!hasInterface) {
-            throw missingRequired(reader, Collections.singleton(Attribute.INTERFACE.getLocalName()));
-        }
     }
 
     private void parseHttpManagementSocket(XMLExtendedStreamReader reader, ModelNode addOp) throws XMLStreamException {
-        // Handle attributes
-        boolean hasInterface = false;
-
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
-            final String value = reader.getAttributeValue(i);
-            if (!isNoNamespaceAttribute(reader, i)) {
-                throw unexpectedAttribute(reader, i);
-            } else {
-                final Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
-                switch (attribute) {
-                    case INTERFACE: {
-                        HttpManagementResourceDefinition.INTERFACE.parseAndSetParameter(value, addOp, reader);
-                        hasInterface = true;
-                        break;
-                    }
-                    case PORT: {
-                        HttpManagementResourceDefinition.HTTP_PORT.parseAndSetParameter(value, addOp, reader);
-                        break;
-                    }
-                    case SECURE_PORT: {
-                        HttpManagementResourceDefinition.HTTPS_PORT.parseAndSetParameter(value, addOp, reader);
-                        break;
-                    }
-                    default:
-                        throw unexpectedAttribute(reader, i);
-                }
-            }
+            throw unexpectedAttribute(reader, i);
         }
-
         requireNoContent(reader);
-
-        if (!hasInterface) {
-            throw missingRequired(reader, Collections.singleton(Attribute.INTERFACE.getLocalName()));
-        }
     }
 
     private void parseHttpManagementSocketBinding(XMLExtendedStreamReader reader, ModelNode addOp) throws XMLStreamException {
@@ -1442,11 +1366,7 @@ public class StandaloneXml extends CommonXml {
             NativeManagementResourceDefinition.SASL_PROTOCOL.marshallAsAttribute(protocol, writer);
             NativeManagementResourceDefinition.SERVER_NAME.marshallAsAttribute(protocol, writer);
 
-            if (NativeManagementResourceDefinition.INTERFACE.isMarshallable(protocol)) {
-                writer.writeEmptyElement(Element.SOCKET.getLocalName());
-                NativeManagementResourceDefinition.INTERFACE.marshallAsAttribute(protocol, writer);
-                NativeManagementResourceDefinition.NATIVE_PORT.marshallAsAttribute(protocol, writer);
-            } else if (NativeManagementResourceDefinition.SOCKET_BINDING.isMarshallable(protocol)) {
+            if (NativeManagementResourceDefinition.SOCKET_BINDING.isMarshallable(protocol)) {
                 writer.writeEmptyElement(Element.SOCKET_BINDING.getLocalName());
                 NativeManagementResourceDefinition.SOCKET_BINDING.marshallAsAttribute(protocol, writer);
             }
@@ -1471,12 +1391,7 @@ public class StandaloneXml extends CommonXml {
             HttpManagementResourceDefinition.ALLOWED_ORIGINS.getAttributeMarshaller()
                     .marshallAsAttribute(HttpManagementResourceDefinition.ALLOWED_ORIGINS, protocol, true, writer);
 
-            if (HttpManagementResourceDefinition.INTERFACE.isMarshallable(protocol)) {
-                writer.writeEmptyElement(Element.SOCKET.getLocalName());
-                HttpManagementResourceDefinition.INTERFACE.marshallAsAttribute(protocol, writer);
-                HttpManagementResourceDefinition.HTTP_PORT.marshallAsAttribute(protocol, writer);
-                HttpManagementResourceDefinition.HTTPS_PORT.marshallAsAttribute(protocol, writer);
-            } else if (HttpManagementResourceDefinition.SOCKET_BINDING.isMarshallable(protocol)
+            if (HttpManagementResourceDefinition.SOCKET_BINDING.isMarshallable(protocol)
                     || HttpManagementResourceDefinition.SECURE_SOCKET_BINDING.isMarshallable(protocol)) {
                 writer.writeEmptyElement(Element.SOCKET_BINDING.getLocalName());
                 HttpManagementResourceDefinition.SOCKET_BINDING.marshallAsAttribute(protocol, writer);
