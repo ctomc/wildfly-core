@@ -385,8 +385,20 @@ public abstract class AbstractControllerService implements Service<ModelControll
         configurationPersister.successfulBoot();
     }
 
-    protected void bootThreadDone() {
+    //todo this could probably be done in better way
+    private void collectDefinedCapabilities(){
+        ManagementResourceRegistration rootResourceRegistration = controller.getManagementModel().getRootResourceRegistration();
+        while (!rootResourceRegistration.getChildNames(PathAddress.EMPTY_ADDRESS).isEmpty()) {
+            for (PathElement el : rootResourceRegistration.getChildAddresses(PathAddress.EMPTY_ADDRESS)){
+                 rootResourceRegistration.getSubModel(PathAddress.pathAddress(el));
+            }
 
+        }
+
+    }
+
+    protected void bootThreadDone() {
+        collectDefinedCapabilities();
     }
 
     protected final MutableRootResourceRegistrationProvider getMutableRootResourceRegistrationProvider() {

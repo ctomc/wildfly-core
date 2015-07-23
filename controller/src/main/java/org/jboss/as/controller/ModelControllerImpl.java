@@ -76,6 +76,7 @@ import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.capability.registry.CapabilityContext;
 import org.jboss.as.controller.capability.registry.CapabilityId;
 import org.jboss.as.controller.capability.registry.CapabilityResolutionContext;
+import org.jboss.as.controller.capability.registry.DefinedCapabilityRegistry;
 import org.jboss.as.controller.capability.registry.DelegatingRuntimeCapabilityRegistry;
 import org.jboss.as.controller.capability.registry.RegistrationPoint;
 import org.jboss.as.controller.capability.registry.RuntimeCapabilityRegistration;
@@ -1268,7 +1269,7 @@ class ModelControllerImpl implements ModelController {
     }
 
     /** Capability registry implementation. */
-    static class CapabilityRegistryImpl implements RuntimeCapabilityRegistry {
+    static class CapabilityRegistryImpl extends DefinedCapabilityRegistry<RuntimeCapabilityRegistration, RuntimeRequirementRegistration> implements RuntimeCapabilityRegistry {
 
         private final Map<CapabilityId, RuntimeCapabilityRegistration> capabilities = new HashMap<>();
         private final Map<CapabilityId, Map<String, RuntimeRequirementRegistration>> requirements = new HashMap<>();

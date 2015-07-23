@@ -47,6 +47,11 @@ import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.access.management.AccessConstraintDefinition;
 import org.jboss.as.controller.access.management.AccessConstraintUtilizationRegistry;
 import org.jboss.as.controller.capability.Capability;
+import org.jboss.as.controller.capability.registry.CapabilityContext;
+import org.jboss.as.controller.capability.registry.CapabilityRegistration;
+import org.jboss.as.controller.capability.registry.CapabilityRegistry;
+import org.jboss.as.controller.capability.registry.RegistrationPoint;
+import org.jboss.as.controller.capability.registry.RequirementRegistration;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.logging.ControllerLogger;
 import org.jboss.as.controller.registry.AttributeAccess.AccessType;
@@ -77,6 +82,7 @@ final class ConcreteResourceRegistration extends AbstractResourceRegistration {
     private final AtomicBoolean runtimeOnly = new AtomicBoolean();
     private final boolean ordered;
     private final AccessConstraintUtilizationRegistry constraintUtilizationRegistry;
+    private final CapabilityRegistry<CapabilityRegistration, RequirementRegistration> capabilityRegistry;
 
     private static final AtomicMapFieldUpdater<ConcreteResourceRegistration, String, NodeSubregistry> childrenUpdater = AtomicMapFieldUpdater.newMapUpdater(AtomicReferenceFieldUpdater.newUpdater(ConcreteResourceRegistration.class, Map.class, "children"));
     private static final AtomicMapFieldUpdater<ConcreteResourceRegistration, String, OperationEntry> operationsUpdater = AtomicMapFieldUpdater.newMapUpdater(AtomicReferenceFieldUpdater.newUpdater(ConcreteResourceRegistration.class, Map.class, "operations"));
@@ -88,9 +94,10 @@ final class ConcreteResourceRegistration extends AbstractResourceRegistration {
 
     ConcreteResourceRegistration(final String valueString, final NodeSubregistry parent, final ResourceDefinition definition,
                                  final AccessConstraintUtilizationRegistry constraintUtilizationRegistry,
-                                 final boolean runtimeOnly, final boolean ordered) {
+                                 final boolean runtimeOnly, final boolean ordered, CapabilityRegistry<CapabilityRegistration,RequirementRegistration> capabilityRegistry) {
         super(valueString, parent);
         this.constraintUtilizationRegistry = constraintUtilizationRegistry;
+        this.capabilityRegistry = capabilityRegistry;
         childrenUpdater.clear(this);
         operationsUpdater.clear(this);
         attributesUpdater.clear(this);
@@ -457,6 +464,9 @@ final class ConcreteResourceRegistration extends AbstractResourceRegistration {
     @Override
     public void registerCapability(Capability capability){
         capabilities.add(capability);
+        RegistrationPoint rp = new RegistrationPoint(getPathAddress(), null);
+        CapabilityRegistration cp = new CapabilityRegistration<>(capability, CapabilityContext.GLOBAL, rp);
+        capabilityRegistry.registerCapability(cp);
     }
 
     NodeSubregistry getOrCreateSubregistry(final String key) {

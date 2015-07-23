@@ -85,4 +85,27 @@ public interface CapabilityRegistry<C extends CapabilityRegistration, R extends 
      *
      */
     boolean hasCapability(String capabilityName, String dependentName, CapabilityContext context);
+
+
+    /**
+     * Registers a capability with the system. Any
+     * {@link org.jboss.as.controller.capability.AbstractCapability#getRequirements() requirements}
+     * associated with the capability will be recorded as requirements.
+     *
+     * @param capability the capability. Cannot be {@code null}
+     */
+    void registerCapabilityDefinition(CapabilityRegistration capability);
+
+
+    /**
+     * Remove a previously registered capability if all registration points for it have been removed.
+     *
+     * @param capabilityName    the name of the capability. Cannot be {@code null}
+     * @param context           the context in which the capability is registered. Cannot be {@code null}
+     * @param registrationPoint the specific registration point that is being removed
+     * @return the capability that was removed, or {@code null} if no matching capability was registered or other
+     * registration points for the capability still exist
+     */
+    CapabilityRegistration removeCapabilityDefinition(String capabilityName, CapabilityContext context, PathAddress registrationPoint);
+
 }
