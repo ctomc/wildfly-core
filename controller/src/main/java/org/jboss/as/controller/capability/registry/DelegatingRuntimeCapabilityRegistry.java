@@ -23,6 +23,7 @@
 package org.jboss.as.controller.capability.registry;
 
 import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.capability.Capability;
 import org.jboss.msc.service.ServiceName;
 
 /**
@@ -106,6 +107,16 @@ public class DelegatingRuntimeCapabilityRegistry implements RuntimeCapabilityReg
     @Override
     public ServiceName getCapabilityServiceName(String capabilityName, CapabilityContext context, Class<?> serviceType) {
         return getDelegate().getCapabilityServiceName(capabilityName, context, serviceType);
+    }
+
+    @Override
+    public void registerCapabilityDefinition(Capability capability, PathAddress registrationPoint) {
+        getDelegate().registerCapabilityDefinition(capability, registrationPoint);
+    }
+
+    @Override
+    public CapabilityRegistration removeCapabilityDefinition(String capabilityName, CapabilityContext context, PathAddress registrationPoint) {
+        return getDelegate().removeCapabilityDefinition(capabilityName, context, registrationPoint);
     }
 
     private RuntimeCapabilityRegistry getDelegate() {

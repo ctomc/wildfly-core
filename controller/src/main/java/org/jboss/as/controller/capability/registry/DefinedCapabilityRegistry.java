@@ -18,26 +18,70 @@
 
 package org.jboss.as.controller.capability.registry;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.capability.Capability;
+import org.jboss.as.controller.logging.ControllerLogger;
 
 /**
  * @author Tomaz Cerar (c) 2015 Red Hat Inc.
  */
-public abstract class DefinedCapabilityRegistry<C extends CapabilityRegistration, R extends RequirementRegistration> implements CapabilityRegistry<C,R> {
+public abstract class DefinedCapabilityRegistry<C extends CapabilityRegistration, R extends RequirementRegistration> implements CapabilityRegistry<C, R> {
 
-    private Map<CapabilityId, CapabilityRegistration> capabilities = new ConcurrentHashMap<>();
+    private final Map<CapabilityId, CapabilityRegistration> capabilities = new ConcurrentHashMap<>();
 
 
     @Override
-    public void registerCapabilityDefinition(CapabilityRegistration capability) {
+    public void registerCapabilityDefinition(Capability capability, PathAddress registrationPoint) {
+        final CapabilityId capabilityId = new CapabilityId(capability.getName(), CapabilityContext.GLOBAL);
+        RegistrationPoint point = new RegistrationPoint(registrationPoint, null);
+        CapabilityRegistration capabilityRegistration = new CapabilityRegistration<>(capability, CapabilityContext.GLOBAL, point);
+
+
+        capabilities.computeIfPresent(capabilityId, (capabilityId1, currentRegistration) -> {
+            RegistrationPoint rp = capabilityRegistration.getOldestRegistrationPoint();
+            // The actual capability must be the same, and we must not already have a registration
+            // from this resource
+            if (!Objects.equals(capabilityRegistration.getCapability(), currentRegistration.getCapability())
+                    || !currentRegistration.addRegistrationPoint(rp)) {
+                throw ControllerLogger.MGMT_OP_LOGGER.capabilityAlreadyRegisteredInContext(capabilityId.getName(),
+                        capabilityId.getContext().getName());
+            }
+            return capabilityRegistration;
+        });
+        capabilities.putIfAbsent(capabilityId, capabilityRegistration);
+
+        /*RegistrationPoint rp = capabilityRegistration.getOldestRegistrationPoint();
+        CapabilityRegistration currentRegistration = capabilities.get(capabilityId);
+        if (currentRegistration != null) {
+            // The actual capability must be the same, and we must not already have a registration
+            // from this resource
+            if (!Objects.equals(capabilityRegistration.getCapability(), currentRegistration.getCapability())
+                    || !currentRegistration.addRegistrationPoint(rp)) {
+                throw ControllerLogger.MGMT_OP_LOGGER.capabilityAlreadyRegisteredInContext(capabilityId.getName(),
+                        capabilityId.getContext().getName());
+            }
+            // else it was ok, and we just recorded the additional registration point
+        } else {
+            capabilities.putIfAbsent(capabilityId, capabilityRegistration);
+        }*/
 
     }
 
     @Override
     public CapabilityRegistration removeCapabilityDefinition(String capabilityName, CapabilityContext context, PathAddress registrationPoint) {
-        return null;
+        return capabilities.remove(new CapabilityId(capabilityName, context));
+    }
+
+    public Set<RegistrationPoint> getPossibleProviderPoints(CapabilityId capabilityId){
+        CapabilityRegistration registration =  capabilities.get(capabilityId);
+        return registration.getRegistrationPoints();
+
     }
 }

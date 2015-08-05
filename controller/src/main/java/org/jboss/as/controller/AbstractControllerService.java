@@ -252,13 +252,14 @@ public abstract class AbstractControllerService implements Service<ModelControll
         final NotificationSupport notificationSupport = NotificationSupport.Factory.create(executorService);
         WritableAuthorizerConfiguration authorizerConfig = authorizer.getWritableAuthorizerConfiguration();
         authorizerConfig.reset();
-        ManagementResourceRegistration rootResourceRegistration = ManagementResourceRegistration.Factory.create(rootResourceDefinition, authorizerConfig);
+        ModelControllerImpl.CapabilityRegistryImpl capabilityRegistry = new ModelControllerImpl.CapabilityRegistryImpl(processType.isServer());
+        ManagementResourceRegistration rootResourceRegistration = ManagementResourceRegistration.Factory.create(rootResourceDefinition, authorizerConfig, capabilityRegistry);
         final ModelControllerImpl controller = new ModelControllerImpl(container, target,
                 rootResourceRegistration,
                 new ContainerStateMonitor(container),
                 configurationPersister, processType, runningModeControl, prepareStep,
                 processState, executorService, expressionResolver, authorizer, auditLogger, notificationSupport,
-                bootErrorCollector, createExtraValidationStepHandler());
+                bootErrorCollector, createExtraValidationStepHandler(), capabilityRegistry);
 
         // Initialize the model
         initModel(controller.getManagementModel(), controller.getModelControllerResource());
@@ -385,20 +386,8 @@ public abstract class AbstractControllerService implements Service<ModelControll
         configurationPersister.successfulBoot();
     }
 
-    //todo this could probably be done in better way
-    private void collectDefinedCapabilities(){
-        ManagementResourceRegistration rootResourceRegistration = controller.getManagementModel().getRootResourceRegistration();
-        while (!rootResourceRegistration.getChildNames(PathAddress.EMPTY_ADDRESS).isEmpty()) {
-            for (PathElement el : rootResourceRegistration.getChildAddresses(PathAddress.EMPTY_ADDRESS)){
-                 rootResourceRegistration.getSubModel(PathAddress.pathAddress(el));
-            }
-
-        }
-
-    }
-
     protected void bootThreadDone() {
-        collectDefinedCapabilities();
+
     }
 
     protected final MutableRootResourceRegistrationProvider getMutableRootResourceRegistrationProvider() {

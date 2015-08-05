@@ -162,14 +162,14 @@ class ModelControllerImpl implements ModelController {
                         final OperationStepHandler prepareStep, final ControlledProcessState processState, final ExecutorService executorService,
                         final ExpressionResolver expressionResolver, final Authorizer authorizer,
                         final ManagedAuditLogger auditLogger, NotificationSupport notificationSupport,
-                        final BootErrorCollector bootErrorCollector, final OperationStepHandler extraValidationStepHandler) {
+                        final BootErrorCollector bootErrorCollector, final OperationStepHandler extraValidationStepHandler, CapabilityRegistryImpl capabilityRegistry) {
         assert serviceRegistry != null;
         this.serviceRegistry = serviceRegistry;
         assert serviceTarget != null;
         this.serviceTarget = serviceTarget;
         assert rootRegistration != null;
-        ManagementModelImpl mmi = new ManagementModelImpl(rootRegistration, Resource.Factory.create(),
-                new CapabilityRegistryImpl(processType.isServer()));
+        ManagementModelImpl mmi = new ManagementModelImpl(rootRegistration, Resource.Factory.create(), capabilityRegistry);
+
         mmi.publish();
         assert stateMonitor != null;
         this.stateMonitor = stateMonitor;

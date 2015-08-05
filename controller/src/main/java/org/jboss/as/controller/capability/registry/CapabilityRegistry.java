@@ -23,6 +23,7 @@
 package org.jboss.as.controller.capability.registry;
 
 import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.capability.Capability;
 
 /**
  * Registry of {@link org.jboss.as.controller.capability.AbstractCapability capabilities} available in the system.
@@ -94,7 +95,7 @@ public interface CapabilityRegistry<C extends CapabilityRegistration, R extends 
      *
      * @param capability the capability. Cannot be {@code null}
      */
-    void registerCapabilityDefinition(CapabilityRegistration capability);
+    void registerCapabilityDefinition(Capability capability, PathAddress registrationPoint);
 
 
     /**
