@@ -24,6 +24,7 @@ package org.jboss.as.controller.capability.registry;
 
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.capability.Capability;
+import org.jboss.msc.service.ServiceName;
 
 /**
  * Registry of {@link org.jboss.as.controller.capability.AbstractCapability capabilities} available in the system.
@@ -33,6 +34,8 @@ import org.jboss.as.controller.capability.Capability;
  * @author Brian Stansberry (c) 2014 Red Hat Inc.
  */
 public interface CapabilityRegistry<C extends CapabilityRegistration, R extends RequirementRegistration> {
+    ServiceName SERVICE_NAME = ServiceName.JBOSS.append("capability-registry");
+
 
     /**
      * Registers a capability with the system. Any

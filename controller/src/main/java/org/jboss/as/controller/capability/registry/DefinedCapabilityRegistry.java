@@ -82,6 +82,5 @@ public abstract class DefinedCapabilityRegistry<C extends CapabilityRegistration
     public Set<RegistrationPoint> getPossibleProviderPoints(CapabilityId capabilityId){
         CapabilityRegistration registration =  capabilities.get(capabilityId);
         return registration.getRegistrationPoints();
-
     }
 }
