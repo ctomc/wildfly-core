@@ -71,6 +71,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.AttributeAccess.AccessType;
@@ -84,6 +85,7 @@ import org.jboss.dmr.ModelType;
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class ModelTestModelDescriptionValidator {
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]*$");
 
     private static final Map<String, ArbitraryDescriptorValidator> VALID_RESOURCE_KEYS;
     private static final Map<String, ArbitraryDescriptorValidator> VALID_CHILD_TYPE_KEYS;
@@ -244,7 +246,7 @@ public class ModelTestModelDescriptionValidator {
     private void validateAttributes(ModelNode attributes) {
         for (String key : attributes.keys()) {
             ModelNode attribute = attributes.get(key);
-            AttributeValidationElement attributeValidationElement = new AttributeValidationElement(key);
+            AttributeValidationElement attributeValidationElement = new AttributeValidationElement(key, key);
             validateAttributeOrParameter(attributeValidationElement, attribute);
         }
     }
@@ -544,6 +546,21 @@ public class ModelTestModelDescriptionValidator {
 
     private static class NullDescriptorValidator implements ArbitraryDescriptorValidator, AttributeOrParameterArbitraryDescriptorValidator {
         static final NullDescriptorValidator INSTANCE = new NullDescriptorValidator();
+
+        @Override
+        public String validate(ModelType currentType, ModelNode currentNode, String descriptor) {
+            return null;
+        }
+
+        @Override
+        public String validate(ModelNode currentNode, String descriptor) {
+            return null;
+        }
+    }
+
+
+    private static class NameDescriptorValidator implements ArbitraryDescriptorValidator, AttributeOrParameterArbitraryDescriptorValidator {
+        static final NameDescriptorValidator INSTANCE = new NameDescriptorValidator();
 
         @Override
         public String validate(ModelType currentType, ModelNode currentNode, String descriptor) {
@@ -1009,10 +1026,18 @@ public class ModelTestModelDescriptionValidator {
     }
 
     private abstract class ValidationElement {
+        protected final String path;
         protected final String name;
 
-        public ValidationElement(String name) {
+        public ValidationElement(String path, String name) {
+            this.path = path;
             this.name = name;
+        }
+
+        void validateName(){
+            if (!NAME_PATTERN.matcher(name).matches()){
+                errors.add(createValidationFailure("Name contains illegal characters"));
+            }
         }
 
         abstract ValidationFailure createValidationFailure(String description);
@@ -1020,7 +1045,7 @@ public class ModelTestModelDescriptionValidator {
 
     private class OperationValidationElement extends ValidationElement {
         OperationValidationElement(String name) {
-            super(name);
+            super(name, name);
         }
 
         String getName() {
@@ -1033,6 +1058,7 @@ public class ModelTestModelDescriptionValidator {
         }
 
         void validateKeys(ModelNode description) {
+            validateName();
             if (!description.isDefined()) {
                 errors.add(createValidationFailure("Missing description for operation"));
                 return;
@@ -1062,12 +1088,12 @@ public class ModelTestModelDescriptionValidator {
 
     private class AttributeValidationElement extends ValidationElement {
         final Map<String, AttributeOrParameterArbitraryDescriptorValidator> standardValidators;
-        AttributeValidationElement(String name) {
-            this(name, VALID_ATTRIBUTE_KEYS);
+        AttributeValidationElement(String path, String name) {
+            this(path, name, VALID_ATTRIBUTE_KEYS);
         }
 
-        public AttributeValidationElement(String name, Map<String, AttributeOrParameterArbitraryDescriptorValidator> standardValidators) {
-            super(name);
+        public AttributeValidationElement(String path, String name, Map<String, AttributeOrParameterArbitraryDescriptorValidator> standardValidators) {
+            super(path, name);
             this.standardValidators = standardValidators;
         }
 
@@ -1077,10 +1103,11 @@ public class ModelTestModelDescriptionValidator {
         }
 
         AttributeValidationElement getChild(String name) {
-            return new AttributeValidationElement(this.name + '.' + name, standardValidators);
+            return new AttributeValidationElement(this.name + '.' + name, name, standardValidators);
         }
 
         void validateKeys(ModelType currentType, ModelNode description) {
+            validateName();
             for (String attrKey : description.keys()) {
                 AttributeOrParameterArbitraryDescriptorValidator validator = standardValidators.get(attrKey);
                 if (validator == null) {
@@ -1118,7 +1145,12 @@ public class ModelTestModelDescriptionValidator {
         private final OperationValidationElement operation;
 
         OperationParameterValidationElement(OperationValidationElement operation, String name) {
-            super(name, VALID_PARAMETER_KEYS);
+            super(name, name, VALID_PARAMETER_KEYS);
+            this.operation = operation;
+        }
+
+        OperationParameterValidationElement(OperationValidationElement operation, String path, String name) {
+            super(path, name, VALID_PARAMETER_KEYS);
             this.operation = operation;
         }
 
@@ -1128,7 +1160,7 @@ public class ModelTestModelDescriptionValidator {
         }
 
         OperationParameterValidationElement getChild(String name) {
-            return new OperationParameterValidationElement(operation, this.name + '.' + name);
+            return new OperationParameterValidationElement(operation, this.name + '.' + name, name);
         }
 
         ValidationFailure createValidationFailure(String message) {
@@ -1160,7 +1192,11 @@ public class ModelTestModelDescriptionValidator {
 
     private class NotificationValidationElement extends ValidationElement {
         NotificationValidationElement(String name) {
-            super(name);
+            super(name, name);
+        }
+
+        NotificationValidationElement(String path, String name) {
+            super(path, name);
         }
 
         @Override
