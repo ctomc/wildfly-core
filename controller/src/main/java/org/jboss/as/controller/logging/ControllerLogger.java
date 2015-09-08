@@ -3242,6 +3242,12 @@ public interface ControllerLogger extends BasicLogger {
     @Message(id = NONE, value = "    %s in context '%s'")
     String formattedCapabilityId(String capability, String context);
 
+    @Message(id = NONE, value = ", possible registration points are: %s")
+    String possibleCapabilityProviderPoints(String providerPoints);
+
+    @Message(id = NONE, value = ", there are no known registration points that could provide it.")
+    String noKnownProviderPoints();
+
     @Message(id = 370, value="Incomplete expression: %s")
     OperationFailedException incompleteExpression(String expression);
 
