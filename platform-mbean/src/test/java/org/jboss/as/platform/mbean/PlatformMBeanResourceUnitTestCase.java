@@ -28,6 +28,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHI
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CORE_SERVICE;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILED;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILURE_DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.INCLUDE_DEFAULTS;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.INCLUDE_RUNTIME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.MODEL_DESCRIPTION;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.NAME;
@@ -126,6 +127,16 @@ public class PlatformMBeanResourceUnitTestCase {
 
     @Test
     public void testRootResource() throws IOException {
+        ModelNode op = getOperation(READ_RESOURCE_OPERATION, null, null);
+        op.get(RECURSIVE).set(true);
+        op.get(INCLUDE_RUNTIME).set(true);
+        op.get(INCLUDE_DEFAULTS).set(true);
+        ModelNode result = executeOp(op, false);
+        Assert.assertTrue(result.isDefined());
+    }
+
+    @Test
+    public void testRootResourceDescription() throws IOException {
         ModelNode op = getOperation(READ_RESOURCE_DESCRIPTION_OPERATION, null, null);
         op.get(RECURSIVE).set(true);
         op.get(OPERATIONS).set(true);
