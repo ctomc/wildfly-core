@@ -44,7 +44,9 @@ import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.test.integration.management.base.AbstractCliTestBase;
 import org.jboss.as.test.integration.management.util.CLIOpResult;
 import org.jboss.as.test.integration.management.util.CLITestUtil;
+import org.jboss.as.test.shared.TestSuiteEnvironment;
 import org.jboss.dmr.ModelNode;
+import org.jboss.logging.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -61,7 +63,7 @@ import org.xnio.IoUtils;
 @RunWith(WildflyTestRunner.class)
 @ServerControl(manual = true)
 public class ReloadOpsTestCase extends AbstractCliTestBase {
-
+    private static final Logger logger = Logger.getLogger(ReloadOpsTestCase.class);
     private static final long TIMEOUT = 10_000L;
 
     @Inject
@@ -79,7 +81,7 @@ public class ReloadOpsTestCase extends AbstractCliTestBase {
         container.stop();
     }
 
-    @Test
+    //@Test
     public void testWriteAttribvuteWithReload() throws Exception {
         ManagementClient managementClient = container.getClient();
         cli.sendLine("/subsystem=logging:read-attribute(name=add-logging-api-dependencies)");
@@ -108,9 +110,32 @@ public class ReloadOpsTestCase extends AbstractCliTestBase {
         assertThat(value, is("false"));
     }
 
+    @Test
+    public void reloadServerTest() throws Exception {
+
+        for (int i = 0; i < 100; i++) {
+
+                /*CLI cli = CLI.newInstance();
+                Thread.sleep(1000);
+                logger.info("!!!!!!!!!!!!!!!!!!! Connect !!!!!!!!!!!!!!!!!!!!!!");
+                cli.connect(TestSuiteEnvironment.getServerAddress(), TestSuiteEnvironment.getServerPort(), null, null);
+                logger.info("!!!!!!!!!!!!!!!!!!! Reload !!!!!!!!!!!!!!!!!!!!!!");
+                cli.cmd("reload");
+                logger.info("!!!!!!!!!!!!!!!!!!! Disconnect !!!!!!!!!!!!!!!!!!!!!!");
+                cli.disconnect();
+                logger.info("!!!!!!!!!!!!!!!!!!! Done !!!!!!!!!!!!!!!!!!!!!!");
+
+                waitForLiveServerToReload(15000);*/
+            Thread.sleep(1000);
+            reloadServer(15000);
+        }
+    }
+
     private void reloadServer(long timeout) throws Exception {
         executeReload();
+        logger.info("!!!!!!!!!!!!!!!!!!! Reload !!!!!!!!!!!!!!!!!!!!!!");
         waitForLiveServerToReload(timeout);
+        logger.info("!!!!!!!!!!!!!!!!!!! Done !!!!!!!!!!!!!!!!!!!!!!");
     }
 
     private static void executeReload() throws Exception {
@@ -130,14 +155,17 @@ public class ReloadOpsTestCase extends AbstractCliTestBase {
         operation.get(OP_ADDR).setEmptyList();
         operation.get(OP).set(READ_ATTRIBUTE_OPERATION);
         operation.get(NAME).set("server-state");
-        ModelControllerClient liveClient = container.getClient().getControllerClient();
         while (System.currentTimeMillis() - start < timeout) {
+            ModelControllerClient liveClient = TestSuiteEnvironment.getModelControllerClient();
             try {
+                logger.infof("Trying to execute op");
                 ModelNode result = liveClient.execute(operation);
+                logger.infof("server state %s",result.get(RESULT).asString());
                 if ("running".equals(result.get(RESULT).asString())) {
                     return;
                 }
             } catch (IOException e) {
+                logger.infof(e, "error");
             } finally {
                 IoUtils.safeClose(liveClient);
             }
