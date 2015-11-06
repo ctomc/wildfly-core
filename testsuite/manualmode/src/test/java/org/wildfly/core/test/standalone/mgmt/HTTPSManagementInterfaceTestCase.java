@@ -108,7 +108,7 @@ public class HTTPSManagementInterfaceTestCase {
 
     @BeforeClass
     public static void startAndSetupContainer() throws Exception {
-        controller.start();
+        controller.startInAdminMode();
 
         ModelControllerClient client = TestSuiteEnvironment.getModelControllerClient();
         ManagementClient managementClient = controller.getClient();

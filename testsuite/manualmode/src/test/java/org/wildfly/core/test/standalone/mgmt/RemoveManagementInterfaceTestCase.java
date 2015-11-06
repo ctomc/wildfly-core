@@ -42,7 +42,6 @@ import org.jboss.as.test.integration.management.util.CLITestUtil;
 import org.jboss.as.test.integration.security.common.CoreUtils;
 import org.jboss.as.test.shared.TestSuiteEnvironment;
 import org.jboss.dmr.ModelNode;
-import org.jboss.logging.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -70,13 +69,12 @@ import org.wildfly.core.testrunner.WildflyTestRunner;
 @Category(CommonCriteria.class)
 public class RemoveManagementInterfaceTestCase {
 
-    public static Logger LOGGER = Logger.getLogger(RemoveManagementInterfaceTestCase.class);
     @Inject
     protected static ServerController controller;
 
     @BeforeClass
     public static void startAndSetupContainer() throws Exception {
-        controller.start();
+        controller.startInAdminMode();
         ManagementClient managementClient = controller.getClient();
         serverSetup(managementClient.getControllerClient());
         // To have the native management interface ok, we need a reload of the server

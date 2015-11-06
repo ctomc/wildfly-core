@@ -101,7 +101,7 @@ public class HTTPSConnectionWithCLITestCase {
 
     @BeforeClass
     public static void prepareServer() throws Exception {
-        containerController.start();
+        containerController.startInAdminMode();
         ManagementClient mgmtClient = containerController.getClient();
         //final ModelControllerClient client = mgmtClient.getControllerClient();
         keystoreFilesSetup.setup(mgmtClient);
