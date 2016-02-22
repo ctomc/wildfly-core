@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -275,7 +276,7 @@ public class Server {
             Assert.assertEquals("success", result.get(ClientConstants.OUTCOME).asString());
         } catch (IOException e) {
             final Throwable cause = e.getCause();
-            if (!(cause instanceof ExecutionException) && !(cause instanceof CancellationException)) {
+            if (!(cause instanceof ExecutionException) && !(cause instanceof CancellationException) && !(cause instanceof SocketException) ) {
                 throw new RuntimeException(e);
             } // else ignore, this might happen if the channel gets closed before we got the response
         }finally {
@@ -288,7 +289,7 @@ public class Server {
         client = createClient();
     }
 
-    private void waitForLiveServerToReload(int timeout) {
+    protected void waitForLiveServerToReload(int timeout) {
         long start = System.currentTimeMillis();
         ModelNode operation = new ModelNode();
         operation.get(OP_ADDR).setEmptyList();

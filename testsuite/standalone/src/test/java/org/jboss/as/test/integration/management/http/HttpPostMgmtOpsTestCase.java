@@ -43,6 +43,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.wildfly.core.testrunner.ManagementClient;
+import org.wildfly.core.testrunner.ServerController;
 import org.wildfly.core.testrunner.WildflyTestRunner;
 
 /**
@@ -220,6 +221,22 @@ public class HttpPostMgmtOpsTestCase {
         ModelNode result = ret.get("result");
 
         assertFalse(result.asList().isEmpty());
+    }
+
+    @Inject
+    private static ServerController container;
+
+    @Test
+    public void testReload() throws Exception {
+
+        ModelNode op = HttpMgmtProxy.getOpNode("/", "reload");
+
+        for (int i= 0; i< 20; i++) {
+            ModelNode ret = httpMgmt.sendPostCommand(op);
+            assertTrue("success".equals(ret.get("outcome").asString()));
+            container.waitForLiveServerToReload(10*1000); //wait 10 seconds for reload
+            testReadChildrenResources();
+        }
     }
 
     @Test

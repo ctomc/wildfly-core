@@ -103,4 +103,8 @@ public class ServerController {
     public void reload(boolean adminMode, int timeout) {
         server.reload(adminMode, timeout);
     }
+
+    public void waitForLiveServerToReload(int timeout){
+        server.waitForLiveServerToReload(timeout);
+    }
 }
