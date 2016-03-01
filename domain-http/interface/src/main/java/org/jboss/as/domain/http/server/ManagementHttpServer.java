@@ -64,6 +64,7 @@ import io.undertow.server.handlers.cache.DirectBufferCache;
 import io.undertow.server.handlers.error.SimpleErrorPageHandler;
 import io.undertow.server.protocol.http.HttpOpenListener;
 import java.util.Collection;
+import java.util.concurrent.Executor;
 
 import org.jboss.as.controller.ControlledProcessStateService;
 import org.jboss.as.controller.ModelController;
@@ -166,7 +167,7 @@ public class ManagementHttpServer {
     public static ManagementHttpServer create(InetSocketAddress bindAddress, InetSocketAddress secureBindAddress, int backlog,
                                               ModelController modelController, SecurityRealm securityRealm, ControlledProcessStateService controlledProcessStateService,
                                               ConsoleMode consoleMode, String consoleSlot, final ChannelUpgradeHandler upgradeHandler,
-                                              ManagementHttpRequestProcessor managementHttpRequestProcessor, Collection<String> allowedOrigins, XnioWorker worker) throws IOException, StartException {
+                                              ManagementHttpRequestProcessor managementHttpRequestProcessor, Collection<String> allowedOrigins, XnioWorker worker, Executor managementExecutor) throws IOException, StartException {
 
         SSLContext sslContext = null;
         SslClientAuthMode sslClientAuthMode = null;
@@ -198,7 +199,7 @@ public class ManagementHttpServer {
         }
 
         setupOpenListener(openListener, modelController, consoleMode, consoleSlot, controlledProcessStateService,
-                secureRedirectPort, securityRealm, upgradeHandler, managementHttpRequestProcessor, allowedOrigins);
+                secureRedirectPort, securityRealm, upgradeHandler, managementHttpRequestProcessor, allowedOrigins, managementExecutor);
         return new ManagementHttpServer(openListener, bindAddress, secureBindAddress, sslContext, sslClientAuthMode, worker);
     }
 
@@ -207,7 +208,7 @@ public class ManagementHttpServer {
                                           String consoleSlot, ControlledProcessStateService controlledProcessStateService,
                                           int secureRedirectPort, SecurityRealm securityRealm,
                                           final ChannelUpgradeHandler upgradeHandler, final ManagementHttpRequestProcessor managementHttpRequestProcessor,
-                                          final Collection<String> allowedOrigins) {
+                                          final Collection<String> allowedOrigins, Executor managementExecutor) {
 
         CanonicalPathHandler canonicalPathHandler = new CanonicalPathHandler();
         ManagementHttpRequestHandler managementHttpRequestHandler = new ManagementHttpRequestHandler(managementHttpRequestProcessor, canonicalPathHandler);
@@ -245,7 +246,7 @@ public class ManagementHttpServer {
         }
 
         ManagementRootConsoleRedirectHandler rootConsoleRedirectHandler = new ManagementRootConsoleRedirectHandler(consoleHandler);
-        DomainApiCheckHandler domainApiHandler = new DomainApiCheckHandler(modelController, controlledProcessStateService, allowedOrigins);
+        DomainApiCheckHandler domainApiHandler = new DomainApiCheckHandler(modelController, controlledProcessStateService, allowedOrigins, managementExecutor);
         pathHandler.addPrefixPath("/", rootConsoleRedirectHandler);
         if (consoleHandler != null) {
             HttpHandler readinessHandler = new RedirectReadinessHandler(securityRealm, consoleHandler.getHandler(),
@@ -253,7 +254,7 @@ public class ManagementHttpServer {
             pathHandler.addPrefixPath(consoleHandler.getContext(), readinessHandler);
         }
 
-        HttpHandler readinessHandler = new DmrFailureReadinessHandler(securityRealm, secureDomainAccess(domainApiHandler, securityRealm), ErrorContextHandler.ERROR_CONTEXT);
+        HttpHandler readinessHandler = new DmrFailureReadinessHandler(securityRealm, secureDomainAccess(new InExecutorHandler(managementExecutor, domainApiHandler), securityRealm), ErrorContextHandler.ERROR_CONTEXT);
         pathHandler.addPrefixPath(DomainApiCheckHandler.PATH, readinessHandler);
         pathHandler.addExactPath("management-upload", readinessHandler);
 
