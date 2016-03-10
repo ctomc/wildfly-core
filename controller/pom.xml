@@ -38,6 +38,7 @@
 
     <properties>
         <test.level>INFO</test.level>
+        <surefire.system.args>-XaddExports:java.security.sasl/com.sun.security.sasl.digest=ALL-UNNAMED,java.security.sasl/com.sun.security.sasl=ALL-UNNAMED</surefire.system.args>
     </properties>
 
     <dependencies>
