@@ -140,7 +140,7 @@
 
         <!-- Surefire args -->
         <surefire.jpda.args/>
-        <surefire.system.args>-Duser.region=US -Duser.language=en -XX:MaxMetaspaceSize=256m ${surefire.jpda.args} -XaddExports:java.xml/com.sun.org.apache.xerces.internal.jaxp=ALL-UNNAMED,java.xml/com.sun.org.apache.xalan.internal.xsltc.trax=ALL-UNNAMED,java.xml/com.sun.org.apache.xpath.internal.jaxp=ALL-UNNAMED,java.xml/com.sun.xml.internal.stream.events=ALL-UNNAMED,java.xml/com.sun.xml.internal.stream=ALL-UNNAMED,java.xml/com.sun.org.apache.xerces.internal.jaxp.datatype=ALL-UNNAMED,java.xml/com.sun.org.apache.xerces.internal.jaxp.validation=ALL-UNNAMED,java.xml/com.sun.org.apache.xerces.internal.parsers=ALL-UNNAMED,java.xml/org.xml.sax=ALL-UNNAMED,java.xml/javax.xml.parsers=ALL-UNNAMED</surefire.system.args>
+        <surefire.system.args>-Duser.region=US -Duser.language=en -Dsun.util.logging.disableCallerCheck=true -XX:MaxMetaspaceSize=256m ${surefire.jpda.args} -XaddExports:java.xml/com.sun.org.apache.xerces.internal.jaxp=ALL-UNNAMED,java.xml/com.sun.org.apache.xalan.internal.xsltc.trax=ALL-UNNAMED,java.xml/com.sun.org.apache.xpath.internal.jaxp=ALL-UNNAMED,java.xml/com.sun.xml.internal.stream.events=ALL-UNNAMED,java.xml/com.sun.xml.internal.stream=ALL-UNNAMED,java.xml/com.sun.org.apache.xerces.internal.jaxp.datatype=ALL-UNNAMED,java.xml/com.sun.org.apache.xerces.internal.jaxp.validation=ALL-UNNAMED,java.xml/com.sun.org.apache.xerces.internal.parsers=ALL-UNNAMED,java.xml/org.xml.sax=ALL-UNNAMED,java.xml/javax.xml.parsers=ALL-UNNAMED</surefire.system.args>
 
         <!-- Checkstyle configuration -->
         <linkXRef>false</linkXRef>
