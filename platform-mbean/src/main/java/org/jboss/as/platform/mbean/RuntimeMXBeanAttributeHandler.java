@@ -116,7 +116,11 @@ class RuntimeMXBeanAttributeHandler extends AbstractPlatformMBeanAttributeHandle
         } else if (PlatformMBeanConstants.BOOT_CLASS_PATH_SUPPORTED.equals(name)) {
             store.set(ManagementFactory.getRuntimeMXBean().isBootClassPathSupported());
         } else if (PlatformMBeanConstants.BOOT_CLASS_PATH.equals(name)) {
-            store.set(ManagementFactory.getRuntimeMXBean().getBootClassPath());
+            if (!ManagementFactory.getRuntimeMXBean().isBootClassPathSupported()) {
+                store.set(""); // JDK9 and above do not have boot class path
+            } else {
+                store.set(ManagementFactory.getRuntimeMXBean().getBootClassPath());
+            }
         } else if (PlatformMBeanConstants.INPUT_ARGUMENTS.equals(name)) {
             store.setEmptyList();
             for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
