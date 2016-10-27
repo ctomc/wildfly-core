@@ -105,6 +105,8 @@ public class SimpleMapAttributeDefinition extends MapAttributeDefinition {
         public Builder(final String name, final ModelType valueType, final boolean allowNull) {
             super(name, allowNull);
             this.valueType = valueType;
+            setAttributeParser(AttributeParser.PROPERTIES_PARSER);
+            setAttributeMarshaller(AttributeMarshaller.PROPERTIES_MARSHALLER);
         }
 
         public Builder(final SimpleMapAttributeDefinition basis) {
@@ -125,9 +127,9 @@ public class SimpleMapAttributeDefinition extends MapAttributeDefinition {
             if (elementValidator == null) {
                 elementValidator = new ModelTypeValidator(valueType, allowNull, allowExpression);
             }
-            if (attributeMarshaller == null) {
+            /*if (attributeMarshaller == null) {
                 attributeMarshaller = new MapAttributeMarshaller();
-            }
+            }*/
             return new SimpleMapAttributeDefinition(this);
         }
     }
